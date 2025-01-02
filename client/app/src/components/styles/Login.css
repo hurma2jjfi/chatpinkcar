@@ -1,4 +1,144 @@
-/* body {
+@import url('https://fonts.googleapis.com/css2?family=Karantina:wght@300;400;700&display=swap');
+
+
+.karantina-light {
+    font-family: "Karantina", serif;
+    font-weight: 300;
+    font-style: normal;
+  }
+  
+  .karantina-regular {
+    font-family: "Karantina", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  .karantina-bold {
+    font-family: "Karantina", serif;
+    font-weight: 700;
+    font-style: normal;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+body, input, button {
     background: #212121;
     color: #fff;
-} */
+    font-family: "Karantina", sans-serif;
+}
+
+.sayHello {
+    font-size: 64px;
+    margin: 21px 0px 57px;
+    font-weight: inherit;
+    margin-left: -83px;
+  }
+  
+  .sayHello span {
+    color: #FF0B8F;
+  }
+  
+.field__one {
+  width: 356px;
+  height: 52px;
+  background: none;
+  border: 1px solid #fff;
+  border-radius: 4px;
+  color: #fff;
+  outline: none;
+  padding: 0px;
+  font-weight: lighter;
+  font-size: 24px;
+  padding: 0px 0px 0px 20px; /* Добавлено padding-left для смещения текста */
+  }
+  
+  
+  .field__two {
+    width: 356px;
+    height: 52px;
+    background: none;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #fff;
+    outline: none;
+    padding: 0px;
+    font-weight: lighter;
+    font-size: 24px;
+    padding: 0px 0px 0px 20px; /* Добавлено padding-left для смещения текста */
+  }
+
+  .submit__btn {
+    width: 358px;
+    height: 52px;
+    background: none;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    padding: 0;
+    font-weight: lighter;
+    font-size: 32px;
+    
+  }
+
+
+.logo__flex {
+    display: flex;
+    justify-content: center;
+    margin-top: 230px;
+    margin-left: -35px;
+}
+
+.title__flex {
+display: flex;
+justify-content: center;
+}
+
+.flex__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.submit__btn {
+margin-top: 20px;
+}
+
+.flex__form {
+    display: flex;
+    justify-content: center;
+}
+
+.center__wrapo {
+    display: flex;
+    justify-content: center;
+    margin-left: 63px;
+}
+
+.wrapper {
+    display: grid; /* Используем Grid для центрирования */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-content: center; /* Центрируем по вертикали */
+    height: calc(100vh - 460px); /* Высота блока равна высоте окна просмотра минус отступы (230px сверху и снизу) */
+    margin-top: 100px; /* Отступ сверху */
+  }
+
+  .back {
+    position: absolute;
+    top: 40px;
+    left: 60px;
+    cursor: pointer;
+  }
+
+  .layerMask {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: -1;
+  }
+  

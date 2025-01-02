@@ -1,0 +1,67 @@
+.overlay {
+    position: fixed;
+    top: 4px; /* Занимает всю высоту */
+    left: 1030px; /* Занимает всю ширину */
+    width: 40%; /* Полная ширина */
+    height: 93%; /* Полная высота */
+    display: flex; /* Центрируем содержимое */
+    justify-content: center; /* Горизонтальное центрирование */
+    align-items: center; /* Вертикальное центрирование */
+    font-size: 24px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный фон */
+    padding: 20px;
+    z-index: 1000; /* Убедитесь, что текст поверх других элементов */
+    transition: opacity 0.5s ease-in-out; /* Плавный переход для исчезновения */
+    font-size: 32px;
+}
+
+
+.sound-waves {
+    display: flex;
+    justify-content: center;
+}
+
+.sound-waves {
+    display: flex;
+    margin-left: 10px; /* Отступ между текстом и звуковыми палочками */
+}
+
+.wave {
+    width: 1px; /* Ширина палочки */
+    height: 20px; /* Начальная высота палочки */
+    background-color: #ff4081; /* Цвет палочек */
+    margin-right: 5px; /* Отступ между палочками */
+}
+
+.pulsing {
+    animation: pulse 0.5s infinite; /* Анимация пульсации */
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.zoom-in {
+    animation: zoomIn 0.5s forwards;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.overlay span {
+    margin: 10px;
+}

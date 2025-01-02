@@ -8,11 +8,12 @@ const socketIo = require('socket.io');
 const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken'); // Для работы с токенами
+let users = [];
 
 const app = express();
 app.use(cors()); // Включаем CORS для HTTP-запросов
 app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads')); // Статическая папка для загруженных файлов
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Настройка multer для загрузки файлов
 const storage = multer.diskStorage({
@@ -52,7 +53,8 @@ connection.connect(err => {
 
 // Middleware для проверки токена
 function authenticateToken(req, res, next) {
-    const token = req.headers['authorization'] && req.headers['authorization'].split(' ')[1];
+    const token = req.headers['authorization']?.split(' ')[1]; // Извлекаем токен из заголовка
+
     if (!token) return res.sendStatus(401); // Если нет токена, возвращаем статус 401
 
     jwt.verify(token, 'your_jwt_secret', (err, user) => { // Замените 'your_jwt_secret' на ваш секретный ключ
@@ -67,7 +69,7 @@ app.get('/api/current-user', authenticateToken, (req, res) => {
     res.status(200).json({ userId: req.userId });
 });
 
-// Получение всех сообщений
+
 // Получение всех сообщений с именами пользователей
 app.get('/api/messages', (req, res) => {
     const query = `
@@ -87,6 +89,26 @@ app.get('/api/messages', (req, res) => {
 });
 
 
+app.get('/api/users', authenticateToken, (req, res) => {
+    const userId = req.userId; // Получаем ID пользователя из запроса
+
+    const query = `
+        SELECT username 
+        FROM users 
+        WHERE id = ? 
+        LIMIT 1
+    `;
+
+    connection.query(query, [userId], (err, results) => {
+        if (err || results.length === 0) { // Проверка на наличие результатов
+            console.error(err);
+            return res.status(404).send('Пользователь не найден'); // Возвращаем статус 404 если пользователь не найден
+        }
+        res.status(200).json(results[0]); // Возвращаем данные текущего пользователя
+    });
+});
+
+
 
 // Обработка подключения веб-сокетов
 io.on('connection', (socket) => {
@@ -101,16 +123,34 @@ io.on('connection', (socket) => {
         socket.emit('loadMessages', results); // Отправляем все сообщения новому клиенту
     });
 
-    socket.on('sendMessage', async ({ userId, message }) => {
+    // Когда пользователь подключается
+    socket.on('userConnected', (userId) => {
+        // Найдите пользователя в массиве и обновите его статус
+        const user = users.find(u => u.id === userId);
+        if (user) {
+            user.is_online = true; // Установите статус онлайн
+            // Также обновите статус в БД
+            updateUserStatusInDB(userId, true);
+            io.emit('userStatusUpdate', users); // Отправьте обновленный список пользователей
+        } else {
+            // Если пользователь не найден в массиве, добавьте его
+            users.push({ id: userId, is_online: true });
+            updateUserStatusInDB(userId, true);
+            io.emit('userStatusUpdate', users); // Обновите всех клиентов о новом пользователе
+        }
+    });
+
+    // Обработка отправки сообщения
+    socket.on('sendMessage', ({ userId, message }) => {
         // Получаем username из базы данных
         connection.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
             if (err || results.length === 0) {
                 console.error("Ошибка при получении имени пользователя:", err);
                 return;
             }
-    
+
             const username = results[0].username;
-    
+
             connection.query(
                 'INSERT INTO messages (user_id, message) VALUES (?, ?)',
                 [userId, message],
@@ -119,7 +159,7 @@ io.on('connection', (socket) => {
                         console.error("Ошибка при сохранении сообщения в БД:", err);
                         return;
                     }
-                    
+
                     const newMessage = { id: Date.now(), user_id: userId, message, username }; // Добавляем username
                     io.emit('receiveMessage', newMessage); // Отправляем новое сообщение всем клиентам
                     console.log(`Saved message to DB and emitted to clients: ${newMessage}`);
@@ -127,60 +167,58 @@ io.on('connection', (socket) => {
             );
         });
     });
-    
 
+    // Когда пользователь отключается
     socket.on('disconnect', () => {
-        console.log('Пользователь отключился:', socket.id);
+        const userId = socket.id; // Или используйте другой способ идентификации пользователя
+        const userIndex = users.findIndex(u => u.id === userId);
+        
+        if (userIndex !== -1) {
+            users[userIndex].is_online = false; // Установите статус оффлайн
+            updateUserStatusInDB(userId, false); // Также обновите статус в БД
+            io.emit('userStatusUpdate', users); // Отправьте обновленный список пользователей
+            users.splice(userIndex, 1); // Удалите пользователя из массива при отключении
+        }
     });
 });
+
+// Функция для обновления статуса пользователя в БД
+const updateUserStatusInDB = (userId, status) => {
+    connection.query(
+        'UPDATE users SET is_online = ? WHERE id = ?',
+        [status, userId],
+        (err) => {
+            if (err) {
+                console.error("Ошибка при обновлении статуса пользователя в БД:", err);
+            }
+        }
+    );
+};
 
 
 // Регистрация пользователя с загрузкой аватарки
 app.post('/register', upload.single('avatar'), async (req, res) => {
     const { email, password, username, bio } = req.body;
-    const avatarPath = req.file ? req.file.path : null; 
+    const avatarPath = req.file ? `uploads/${req.file.filename}` : null; // Сохраняем только относительный путь
 
     if (!email || !email.includes('@')) {
-        return res.status(400).send('Некорректный email. Убедитесь, что он содержит "@"');
+        return res.status(400).send('Некорректный email');
     }
 
-    if (!password || password.length < 8) {
-        return res.status(400).send('Пароль не может быть пустым и должен содержать минимум 8 символов');
-    }
-
-    // Check if user already exists
-    connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
-        if (err) {
-            console.error("Ошибка при проверке пользователя:", err);
-            return res.status(500).send('Ошибка при проверке пользователя');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    connection.query('INSERT INTO users (email, password, username, bio, avatar) VALUES (?, ?, ?, ?, ?)', 
+        [email, hashedPassword, username, bio, avatarPath], 
+        (err) => {
+            if (err) {
+                console.error("Ошибка при сохранении пользователя:", err);
+                return res.status(500).send('Ошибка при сохранении пользователя');
+            }
+            res.status(201).send('Пользователь зарегистрирован успешно');
         }
-
-        if (results.length > 0) {
-            return res.status(400).send('Пользователь с таким email уже существует');
-        }
-        
-        try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Insert new user into database
-            connection.query(
-                'INSERT INTO users (email, password, username, bio, avatar) VALUES (?, ?, ?, ?, ?)',
-                [email, hashedPassword, username, bio, avatarPath],
-                (err) => {
-                    if (err) {
-                        console.error("Ошибка при регистрации пользователя:", err);
-                        return res.status(500).send('Ошибка при регистрации пользователя');
-                    }
-
-                    res.status(201).send('Пользователь зарегистрирован');
-                }
-            );
-        } catch (hashError) {
-            console.error("Ошибка при хешировании пароля:", hashError);
-            return res.status(500).send('Ошибка при хешировании пароля');
-        }
-    });
+    );
 });
+
+
 
 
 // Авторизация пользователя и создание токена
@@ -262,49 +300,43 @@ app.delete('/api/messages/:id', authenticateToken, (req, res) => {
 });
 
 
+
+
 app.post('/api/messages/:id/view', authenticateToken, (req, res) => {
     const messageId = req.params.id;
-    const userId = req.userId;
+    const userId = req.userId; // Теперь берем ID пользователя из req.userId
 
-    // Проверяем, есть ли уже userId в viewed_by
-    connection.query(
-        'SELECT viewed_by FROM messages WHERE id = ?',
-        [messageId],
-        (err, results) => {
+    connection.query('SELECT viewed_by FROM messages WHERE id = ?', [messageId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Ошибка при получении сообщения');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Сообщение не найдено');
+        }
+
+        // Десериализация массива viewed_by
+        let viewedBy = results[0].viewed_by ? JSON.parse(results[0].viewed_by) : [];
+
+        // Проверка, если ID пользователя уже находится в массиве
+        if (!viewedBy.includes(userId)) {
+            viewedBy.push(userId); // Добавляем ID пользователя
+        } else {
+            // Если пользователь уже добавлен, просто возвращаем успешный ответ
+            return res.status(200).send('Статус сообщения уже обновлен');
+        }
+
+        // Сериализация массива для сохранения в базу данных
+        connection.query('UPDATE messages SET viewed_by = ? WHERE id = ?', [JSON.stringify(viewedBy), messageId], (err) => {
             if (err) {
                 console.error(err);
-                return res.status(500).send('Ошибка при получении статуса просмотра сообщения');
+                return res.status(500).send('Ошибка при обновлении статуса сообщения');
             }
-
-            const viewedByArray = results[0]?.viewed_by || '[]';
-            const viewedByList = JSON.parse(viewedByArray);
-
-            // Проверяем, был ли пользователь уже добавлен
-            if (!viewedByList.includes(userId)) {
-                // Если нет, добавляем его
-                connection.query(
-                    'UPDATE messages SET viewed_by = JSON_ARRAY_APPEND(viewed_by, "$", ?) WHERE id = ?',
-                    [userId, messageId],
-                    (err) => {
-                        if (err) {
-                            console.error(err);
-                            return res.status(500).send('Ошибка при обновлении статуса просмотра сообщения');
-                        }
-                        // Эмитим событие на клиентскую сторону
-                        io.emit('messageViewed', messageId); // Уведомляем всех о просмотре сообщения
-                        return res.status(200).send('Статус просмотра обновлен');
-                    }
-                );
-            } else {
-                // Если пользователь уже был добавлен
-                return res.status(200).send('Пользователь уже просмотрел сообщение');
-            }
-        }
-    );
+            res.status(200).send('Статус сообщения обновлен');
+        });
+    });
 });
-
-
-
 
 
 

@@ -1,0 +1,331 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow-y: none;
+}
+
+h1 {
+    margin: 0;
+    padding: 0;
+}
+
+.room__container {
+    display: flex;
+    justify-content: center;
+
+}
+
+.title {
+    font-size: 96px;
+    font-weight: bold;
+}
+
+
+html, body {
+    height: 100%; /* Устанавливаем высоту для body и html */
+    margin: 0; /* Убираем отступы */
+}
+
+.grid {
+    display: flex; /* Устанавливаем flex-контейнер */
+    flex-direction: column; /* Указываем направление колонок */
+    justify-content: center; /* Центрируем элементы по вертикали */
+    /* align-items: center;  */
+    height: 80vh; /* Высота контейнера равна высоте области просмотра */
+    gap: 30px; /* Задаем промежуток между элементами */
+    overflow-y: auto; /* Добавляем прокрутку по вертикали при необходимости */
+    position: relative;
+    left: 30px;
+    overflow-x: hidden;
+    padding-right: 15px;
+}
+
+
+.message {
+    padding: 15px; 
+    border-radius: 5px; 
+    max-width: 80%; 
+    word-wrap: break-word; 
+}
+
+.grid::-webkit-scrollbar {
+    width: 1px; /* Ширина скроллбара */
+}
+
+.grid::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Цвет фона трека скроллбара */
+}
+
+.grid::-webkit-scrollbar-thumb {
+    background-color: #ff4081; /* Цвет ползунка скроллбара */
+}
+
+.grid::-webkit-scrollbar-thumb:hover {
+    background-color: #000000; /* Цвет ползунка при наведении */
+}
+
+.input__container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dsaodka:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-position: top right;
+    background-size: 510px auto;
+    background-repeat: repeat;
+    background-image: url('../../assets/chat-bg-pattern-dark.ad38368a9e8140d0ac7d.png');
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+
+
+.room__container {
+    text-align: center; /* Центрирование заголовка */
+}
+
+.title {
+    font-size: 96px; /* Размер заголовка */
+    font-weight: bold;
+    margin-bottom: 20px; /* Отступ снизу */
+}
+
+
+.message {
+    display: flex; 
+    align-items: center; 
+    /* padding: 15px 8px 6px; */
+    width: 220px;
+    height: 32px;
+    color: #fff; 
+    border-radius: 24px;
+    position: relative;
+     
+}
+
+.blur-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #6200ff, #ff4081); 
+    filter: blur(20px);
+    z-index: -1; 
+}
+
+
+span {
+    position: relative;
+    z-index: 1;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+}
+
+.message__time {
+    margin: 5px;
+}
+
+.message strong {
+    position: relative; 
+    z-index: 1; 
+}
+
+
+.message:last-child {
+    border-bottom: none; 
+}
+
+.avatar__img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Круглая форма аватара */
+    margin-right: 10px; /* Отступ справа от аватара */
+}
+
+.message__content {
+    flex-grow: 1; /* Позволяет содержимому занимать доступное пространство */
+}
+
+.edit-form {
+    display: flex; /* Используем flexbox для формы редактирования */
+}
+
+.edit-form input {
+    flex-grow: 1; /* Поле ввода занимает доступное пространство */
+    padding: 5px;
+}
+
+.input__container {
+    display: flex;
+    align-items: center; 
+}
+
+
+.flex-send-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 5px;
+}
+
+
+
+.field__msg {
+    width: 631px;
+    height: 38px;
+    border-radius: 10px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 1.5); /* Add shadow effect */
+    background: #121212;
+    border: 1px solid #121212;
+    padding: 25px 60px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-size: 24px;
+    font-weight: lighter;
+}
+
+.field__msg:focus {
+    outline: none;
+    border: 1px solid #ff4081;
+    box-shadow: 0 0 8px rgba(255, 64, 129, 0.8);
+}
+
+.btn__send {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: none;
+    background: #121212;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 1.5); /* Add shadow effect */
+}
+
+.btn__send:hover {
+cursor: pointer;
+transition: 1.1s;
+background: #383838;
+transform: scale(1.1);
+}
+
+.btn__stikers {
+    background: none;
+    border: none;
+    position: relative;
+    left: 40px;
+    cursor: pointer;
+}
+
+.btn__wrapper {
+    display: flex;
+    justify-content: end;
+    margin-left: 785px;
+    margin-top: -65px;
+    gap: 5px;
+}
+
+.logout__btn {
+    width: 92px;
+    height: 33px;
+    color: red;
+    border: none;
+    background: #121212;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout__btn:hover {
+    transition: 1.1s;
+    background: #383838;
+}
+
+.logout__btn {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+}
+
+.input__container {
+    position: fixed; /* Fixes the container to the bottom of the viewport */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for centering */
+    bottom: 1.25rem; /* Position 1.25rem from the bottom */
+    display: flex; /* Flexbox for alignment */
+    gap: 10px; /* Space between elements */
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+
+.flex__btn__voic {
+    display: grid;
+
+}
+
+.micro {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: none;
+    background: #121212;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 1.5);
+}
+
+.flex__micro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.micro:hover {
+cursor: pointer;
+transition: 1.1s;
+background: #383838;
+transform: scale(1.1);
+}
+
+.username__profile {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 10px;
+}
+
+.username {
+    font-size: 20px;
+    user-select: none; 
+}
+
+
+.username__profile {
+    cursor: pointer;
+}
+
+
+.avatar, .username:hover {
+color: #383838;
+
+}
+
+.avatar:hover {
+    background-color: #383838;
+}
+
+.username__profile {
+position: absolute;
+top: 20px;
+right: 80px;
+
+}
+
+.avatar {
+    user-select: none; /* Prevents text selection */
+}
+
