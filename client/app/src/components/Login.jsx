@@ -70,7 +70,7 @@ function Login() {
               <img src={backSvg}/>
             </Link>
           </div>
-          <div className="layerMask"><img src={LayerMask} /></div>
+          {/* <div className="layerMask"><img src={LayerMask} /></div> */}
           <div className="title__flex">
             <h1 className='sayHello'>Sign in to chat <span>Pinkcar</span></h1>
           </div>
@@ -103,6 +103,21 @@ function Login() {
           </div>
         </form>
       </div>
+      
+
+      <div className="forgotPass__wrap flex items-center justify-center mt-3">
+            <div className="wrap flex items-center space-x-4"> {/* Используем flex и space-x для равного расстояния */}
+                <Link to="/forgot-password" className="text-center link">
+                    <h1>Forgot password?</h1>
+                </Link>
+                <span>|</span> 
+                <Link to="/register" className="text-center link">
+                    <h1>Don't have an account?</h1>
+                </Link>
+            </div>
+        </div>
+
+
       <ToastContainer />
     </div>
   );

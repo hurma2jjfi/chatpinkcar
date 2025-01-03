@@ -8,6 +8,8 @@ const socketIo = require('socket.io');
 const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken'); // Для работы с токенами
+const nodemailer = require('nodemailer');
+const crypto = require('crypto'); 
 let users = [];
 
 const app = express();
@@ -64,6 +66,119 @@ function authenticateToken(req, res, next) {
     });
 }
 
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'legashurik2@gmail.com',
+        pass: 'rynk nzxu jbcn odxp'
+    },
+});
+
+app.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    // Проверка существования пользователя в базе данных
+    const userQuery = 'SELECT * FROM users WHERE email = ?';
+    connection.query(userQuery, [email], async (err, results) => {
+        if (err || results.length === 0) {
+            return res.status(404).json({ message: 'Пользователь не найден' });
+        }
+
+        const userId = results[0].id;
+        const token = crypto.randomBytes(20).toString('hex'); // Генерация токена
+
+        // Сохранение токена и его срока действия в базе данных
+        const tokenQuery = 'UPDATE users SET resetPasswordToken = ?, resetPasswordExpires = ? WHERE id = ?';
+        connection.query(tokenQuery, [token, new Date(Date.now() + 3600000), userId], (err) => { // Токен действителен 1 час
+            if (err) {
+                console.error("Ошибка при сохранении токена:", err); // Логируем ошибку
+                return res.status(500).json({ message: 'Ошибка при сохранении токена' });
+            }
+        
+            const resetUrl = `http://localhost:3001/reset-password/${token}`; // Измените URL
+
+const mailOptions = {
+    to: email,
+    subject: 'Сброс пароля',
+    html: `Вы получили это письмо, потому что вы запросили сброс пароля. Пожалуйста, перейдите по следующей ссылке: <a href="${resetUrl}">Сбросить пароль</a>`,
+};
+
+        
+            transporter.sendMail(mailOptions, (error) => {
+                if (error) {
+                    console.error("Ошибка при отправке письма:", error); // Логируем ошибку
+                    return res.status(500).json({ message: 'Ошибка при отправке письма' });
+                }
+                res.status(200).json({ message: 'Письмо с инструкциями по сбросу пароля отправлено' });
+            });
+        });
+    });
+});
+
+
+app.post('/reset-password/:token', async (req, res) => {
+    const { password } = req.body; // Получаем новый пароль из тела запроса
+    const token = req.params.token; // Получаем токен из параметров запроса
+
+    // Проверка существования токена в базе данных
+    const query = 'SELECT * FROM users WHERE resetPasswordToken = ? AND resetPasswordExpires > ?';
+    connection.query(query, [token, new Date()], (err, results) => {
+        if (err || results.length === 0) {
+            console.error("Недействительный или просроченный токен:", err); // Логируем ошибку
+            return res.status(400).json({ message: 'Недействительный или просроченный токен' });
+        }
+
+        const userId = results[0].id;
+
+        // Проверяем, что пароль не пустой
+        if (!password || password.trim() === '') {
+            return res.status(400).json({ message: 'Пароль не может быть пустым' });
+        }
+
+        // Хеширование нового пароля и обновление записи в базе данных
+        bcrypt.hash(password, 10, (err, hashedPassword) => {
+            if (err) {
+                console.error("Ошибка при хешировании пароля:", err); // Логируем ошибку
+                return res.status(500).json({ message: 'Ошибка при хешировании пароля' });
+            }
+
+            const updateQuery = 'UPDATE users SET password = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL WHERE id = ?';
+            connection.query(updateQuery, [hashedPassword, userId], (err) => {
+                if (err) {
+                    console.error("Ошибка при обновлении пароля:", err); // Логируем ошибку
+                    return res.status(500).json({ message: 'Ошибка при обновлении пароля' });
+                }
+
+                res.status(200).json({ message: 'Пароль успешно изменен' });
+            });
+        });
+    });
+});
+
+
+
+
+
+
+// app.get('/resetpassword', (req, res) => {
+//     const token = req.query.token; // Получаем токен из параметров запроса
+
+//     // Здесь вы можете отобразить страницу сброса пароля
+//     // Например, если у вас есть фронтенд на React:
+//     res.send(`
+//         <form action="/reset-password/${token}" method="POST">
+//             <input type="password" name="password" placeholder="Новый пароль" required />
+//             <input type="password" name="confirmPassword" placeholder="Подтвердите новый пароль" required />
+//             <button type="submit">Сбросить пароль</button>
+//         </form>
+//     `);
+// });
+
+
+
+
+
 // Получение текущего пользователя
 app.get('/api/current-user', authenticateToken, (req, res) => {
     res.status(200).json({ userId: req.userId });
@@ -93,7 +208,7 @@ app.get('/api/users', authenticateToken, (req, res) => {
     const userId = req.userId; // Получаем ID пользователя из запроса
 
     const query = `
-        SELECT username 
+        SELECT id, username 
         FROM users 
         WHERE id = ? 
         LIMIT 1
@@ -107,6 +222,7 @@ app.get('/api/users', authenticateToken, (req, res) => {
         res.status(200).json(results[0]); // Возвращаем данные текущего пользователя
     });
 });
+
 
 
 
@@ -256,6 +372,52 @@ app.post('/login', async (req, res) => {
         res.status(200).json({ message: 'Успешный вход', token }); 
     });
 });
+
+app.post('/change-password', async (req, res) => {
+    console.log(req.body); // Логируем тело запроса
+    const { userId, password } = req.body;
+
+    if (!userId || !password) {
+        return res.status(400).json({ message: 'Пользователь и пароль не могут быть пустыми' });
+    }
+
+    try {
+        // Хешируем новый пароль
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Обновляем пароль в базе данных
+        connection.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId], (error, results) => {
+            if (error) {
+                console.error("Ошибка при изменении пароля:", error);
+                return res.status(500).json({ message: 'Произошла ошибка при изменении пароля', error: error.message });
+            }
+
+            if (results.affectedRows === 0) {
+                return res.status(404).json({ message: 'Пользователь не найден' });
+            }
+
+            res.status(200).json({ message: 'Пароль успешно изменен' });
+        });
+    } catch (error) {
+        console.error("Ошибка при изменении пароля:", error);
+        res.status(500).json({ message: 'Произошла ошибка при изменении пароля', error: error.message });
+    }
+});
+
+
+app.get('/user-id', authenticateToken, (req, res) => {
+    const userId = req.userId; 
+    res.status(200).json({ userId }); 
+});
+
+
+
+
+
+
+
+
+
 
 
 // Обновление сообщения

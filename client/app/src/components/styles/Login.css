@@ -36,7 +36,7 @@ body, input, button {
     font-size: 64px;
     margin: 21px 0px 57px;
     font-weight: inherit;
-    margin-left: -83px;
+    margin-left: -63px;
   }
   
   .sayHello span {
@@ -142,3 +142,26 @@ margin-top: 20px;
     z-index: -1;
   }
   
+
+.link {
+  position: relative;
+  text-decoration: none; /* Убираем стандартное подчеркивание */
+  color: inherit; /* Наследуем цвет текста */
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0; /* Позиционируем подчеркивание внизу */
+  height: 1px; /* Высота линии */
+  background-color: rgb(255, 255, 255); /* Цвет линии */
+  transform: scaleX(0); /* Изначально скрываем линию */
+  transition: transform 0.3s ease; /* Плавный переход */
+  opacity: 30%;
+}
+
+.link:hover::after {
+  transform: scaleX(1); /* Показываем линию при наведении */
+}

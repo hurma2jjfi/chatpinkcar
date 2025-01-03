@@ -126,7 +126,7 @@ function Register() {
             <img src={backSvg} alt="Back" />
           </Link>
         </div>
-        <div className="layerMask"><img src={LayerMask} alt="Layer Mask" /></div>
+        {/* <div className="layerMask"><img src={LayerMask} alt="Layer Mask" /></div> */}
         <h1 className='sayhello'>Register in the <span>Pinkcar</span></h1>
         <div className="wrapper__form">
           <form onSubmit={handleRegister}>
