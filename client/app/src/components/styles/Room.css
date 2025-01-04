@@ -329,3 +329,30 @@ right: 80px;
     user-select: none; /* Prevents text selection */
 }
 
+.emoji__picker {
+    position: absolute;
+    top: 405px;
+    left: 654px;
+}
+
+.emoji__picker .EmojiPickerReact {
+    background-color: #333; /* Цвет фона */
+    color: #fff; /* Цвет текста */
+    border: none;
+}
+
+.emoji__picker .EmojiPickerReact .epr-emoji {
+    background-color: transparent; /* Фон для эмодзи */
+}
+
+.emoji__picker .EmojiPickerReact .epr-emoji:hover {
+    background-color: #444; /* Цвет фона при наведении */
+}
+
+.emoji__picker .EmojiPickerReact .epr-search input::placeholder {
+    color: #ccc; /* Цвет плейсхолдера */
+}
+
+.emoji__picker h2 {
+    background-color: #333;
+} 

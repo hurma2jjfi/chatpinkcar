@@ -17,6 +17,7 @@ import VoiceMessageInput from './voice/VoiseMessage';
 import ProfileIcon from './profile/ProfileIcon';
 import SimpleMenu from './profile/SimpleMenu';
 
+
 const socket = io('http://127.0.0.1:3000');
 
 function Room() {
@@ -34,7 +35,35 @@ function Room() {
     const [username, setUsername] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
     
-    
+
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/user-id', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении user ID');
+                }
+
+                const data = await response.json();
+                setUserId(data.userId); // Сохраняем userId в состоянии
+                console.log('User ID:', data.userId); // Выводим userId в консоль
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        };
+
+        fetchUserId();
+    }, []);
+
+
+
+
 
     useEffect(() => {
         const originalTitle = `Чат - ${messages.length} ${messages.length === 1 ? 'сообщение' : 'сообщений'}`;
@@ -161,39 +190,61 @@ function Room() {
 
     const handleEditSubmit = async (e) => {
         e.preventDefault();
+        
+        console.log('Обновляем сообщение с ID:', editingMessageId); // Логируем ID сообщения
+    
+        // Проверка на пустое сообщение
         if (!editingMessageText.trim()) {
             toast.error('Сообщение не может быть пустым');
             return;
         }
-
+    
         try {
             const token = localStorage.getItem('token');
-            await axios.put(
+    
+            // Отправка PUT-запроса на сервер
+            const response = await axios.put(
                 `http://localhost:3000/api/messages/${editingMessageId}`,
                 { message: editingMessageText },
                 { headers: { Authorization: `Bearer ${token}` } },
             );
-            setMessages((prevMessages) =>
-                prevMessages.map((msg) =>
-                    msg.id === editingMessageId ? { ...msg, message: editingMessageText } : msg,
-                ),
-            );
-            setEditingMessageId(null);
-            setEditingMessageText('');
-            toast.success('Сообщение обновлено!');
+    
+            // Проверка успешного ответа от сервера
+            if (response.status === 200) {
+                // Обновляем состояние локально
+                setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                        msg.id === editingMessageId ? { ...msg, message: editingMessageText } : msg,
+                    ),
+                );
+                setEditingMessageId(null);
+                setEditingMessageText('');
+                toast.success('Сообщение обновлено!');
+            }
         } catch (error) {
             console.error(error);
             toast.error('Ошибка при обновлении сообщения: ' + (error.response?.data || error.message));
         }
     };
-
+    
+    
+    
+    
+    
+    
     const handleConfirmDelete = async () => {
+        console.log('Удаляем сообщение с ID:', messageToDelete); // Логируем ID сообщения
         if (messageToDelete) {
             try {
                 const token = localStorage.getItem('token');
                 await axios.delete(`http://localhost:3000/api/messages/${messageToDelete}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+    
+                // Отправляем событие через сокет
+                socket.emit('messageDeleted', messageToDelete);
+    
+                // Удаляем сообщение из состояния
                 setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== messageToDelete));
                 toast.success('Сообщение удалено!');
             } catch (error) {
@@ -203,7 +254,11 @@ function Room() {
         }
         setIsModalOpen(false); // Закрываем модальное окно
     };
+    
+    
 
+
+    
     const handleDeleteClick = (messageId) => {
         setMessageToDelete(messageId); // Устанавливаем сообщение для удаления
         setIsModalOpen(true); // Открываем модальное окно
@@ -297,63 +352,63 @@ function Room() {
             </div>
 
             <div className="grid space-y-4 max-w-2xl mx-auto">
-    {messages.map((msg) => (
-        <div
-        key={msg.id}
-        className="bg-gray shadow-md rounded-lg p-3 flex flex-col sm:flex-row transition-transform transform hover:scale-105"
-        style={{ borderLeft: '2px solid rgb(139, 38, 217)' }} 
-    >
-            <img
-                className='avatar__img rounded-full w-10 h-10 mb-2 sm:mb-0 sm:mr-3'
-                src={msg.avatar ? `${process.env.REACT_APP_API_URL}/${msg.avatar}` : 'default-avatar.png'}
-                alt="Avatar"
-            />
-
-            <div className="flex-grow">
-                <strong style={{ color: generateColorFromUsername(msg.username) }} className="text-blue-600">{msg.username}</strong>
-                {users.map(user => (
-    <div key={user.id}>
-        <span>{user.username}</span>
-        <span className={`status-indicator ${user.online ? 'online' : 'offline'}`}></span>
-    </div>
-))}
-
-                <p className="text-gray-700">{msg.message}</p>
-                <FlagMessage message={msg} />
-                <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
-            </div>
-
-            {editingMessageId === msg.id ? (
-                <form onSubmit={handleEditSubmit} className="flex flex-col mt-2">
-                    <input
-                        type="text"
-                        value={editingMessageText}
-                        onChange={(e) => setEditingMessageText(e.target.value)}
-                        required
-                        className="border border-gray-300 rounded p-1 focus:outline-none focus:ring focus:ring-blue-500"
+            {messages.map((msg) => (
+                <div
+                    key={msg.id}
+                    className="bg-gray shadow-md rounded-lg p-3 flex flex-col sm:flex-row transition-transform transform hover:scale-105"
+                    style={{ borderLeft: '2px solid rgb(139, 38, 217)' }} 
+                >
+                    <img
+                        className='avatar__img rounded-full w-10 h-10 mb-2 sm:mb-0 sm:mr-3'
+                        src={msg.avatar ? `${process.env.REACT_APP_API_URL}/${msg.avatar}` : 'default-avatar.png'}
+                        alt="Avatar"
                     />
-                    <button type="submit" className="bg-blue-500 text-white rounded mt-1 text-sm hover:bg-blue-600 transition">Save</button>
-                </form>
-            ) : (
-                <div className="message__actions flex space-x-1 mt-10">
-    <button 
-    onClick={() => handleEditClick(msg)} 
-    className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
->
-    <EditIcon className="m-0" />  
-</button>
-<button 
-    onClick={() => handleDeleteClick(msg.id)} 
-    className="flex items-center justify-center bg-red-400 text-white rounded-full w-9 h-9 hover:bg-red-500 transition"
->
-    <DeleteIcon className="m-0" />  
-</button>
 
-</div>
+                    <div className="flex-grow">
+                        <strong style={{ color: generateColorFromUsername(msg.username) }} className="text-blue-600">{msg.username}</strong>
+                        {users.map(user => (
+                            <div key={user.id}>
+                                <span>{user.username}</span>
+                                <span className={`status-indicator ${user.online ? 'online' : 'offline'}`}></span>
+                            </div>
+                        ))}
 
-            )}
-        </div>
-    ))}
+                        <p className="text-gray-700">{msg.message}</p>
+                        <FlagMessage message={msg} />
+                        <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
+                    </div>
+
+                    {msg.user_id === userId && ( // Проверяем, является ли текущий пользователь владельцем сообщения
+                        editingMessageId === msg.id ? (
+                            <form onSubmit={handleEditSubmit} className="flex flex-col mt-2">
+                                <input
+                                    type="text"
+                                    value={editingMessageText}
+                                    onChange={(e) => setEditingMessageText(e.target.value)}
+                                    required
+                                    className="border border-gray-300 rounded p-1 focus:outline-none focus:ring focus:ring-blue-500"
+                                />
+                                <button type="submit" className="bg-blue-500 text-white rounded mt-1 text-sm hover:bg-blue-600 transition">Save</button>
+                            </form>
+                        ) : (
+                            <div className="message__actions flex space-x-1 mt-10">
+                                <button 
+                                    onClick={() => handleEditClick(msg)} 
+                                    className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
+                                >
+                                    <EditIcon className="m-0" />  
+                                </button>
+                                <button 
+                                    onClick={() => handleDeleteClick(msg.id)} 
+                                    className="flex items-center justify-center bg-red-400 text-white rounded-full w-9 h-9 hover:bg-red-500 transition"
+                                >
+                                    <DeleteIcon className="m-0" />  
+                                </button>
+                            </div>
+                        )
+                    )}
+                </div>
+            ))}
 </div>
 
 
@@ -383,40 +438,7 @@ function Room() {
             </div>
             
             
-            {/* <Button
-            title='Logout with account...'
-            variant="contained"
-            style={{
-                fontFamily: '"Karantina", serif', 
-                backgroundColor: 'rgb(247, 70, 70)', 
-                position: 'absolute', 
-                top: '20px', 
-                right: '20px',
-                textTransform: 'capitalize',
-                fontSize: '16px', 
-                padding: '6px 14px', 
-                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
-                transition: 'background-color 0.3s, box-shadow 0.3s', 
-            }}
-            startIcon={<LogoutIcon style={{ fontSize: '22px' }} />}
-            onClick={handleLogout}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgb(200, 50, 50)'; // Цвет при наведении
-                e.currentTarget.style.boxShadow = '0px 6px 12px rgba(0, 0, 0, 0.3)'; // Увеличенная тень
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgb(247, 70, 70)'; // Возвращаем исходный цвет
-                e.currentTarget.style.boxShadow = '0px 4px 8px rgba(0, 0, 0, 0.2)'; // Возвращаем исходную тень
-            }}
-            onFocus={(e) => {
-                e.currentTarget.style.boxShadow = '0px 6px 12px rgba(0, 0, 0, 0.3)'; // Увеличенная тень при фокусе
-            }}
-            onBlur={(e) => {
-                e.currentTarget.style.boxShadow = '0px 4px 8px rgba(0, 0, 0, 0.2)'; // Возвращаем исходную тень при потере фокуса
-            }}
-        >
-            Logout
-        </Button> */}
+        
 
 
 
@@ -425,8 +447,9 @@ function Room() {
 
 
 
+<div className="emoji__picker">
+            {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiClick} />}</div>
 
-            {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiClick} />}
             <ToastContainer />
 
             <ConfirmModal 

@@ -45,7 +45,8 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'messanger'
+    database: 'messanger',
+    charset: 'utf8mb4'
 });
 
 connection.connect(err => {
@@ -161,22 +162,6 @@ app.post('/reset-password/:token', async (req, res) => {
 
 
 
-// app.get('/resetpassword', (req, res) => {
-//     const token = req.query.token; // Получаем токен из параметров запроса
-
-//     // Здесь вы можете отобразить страницу сброса пароля
-//     // Например, если у вас есть фронтенд на React:
-//     res.send(`
-//         <form action="/reset-password/${token}" method="POST">
-//             <input type="password" name="password" placeholder="Новый пароль" required />
-//             <input type="password" name="confirmPassword" placeholder="Подтвердите новый пароль" required />
-//             <button type="submit">Сбросить пароль</button>
-//         </form>
-//     `);
-// });
-
-
-
 
 
 // Получение текущего пользователя
@@ -191,7 +176,7 @@ app.get('/api/messages', (req, res) => {
         SELECT messages.*, users.username 
         FROM messages 
         JOIN users ON messages.user_id = users.id 
-        ORDER BY messages.created_at DESC
+        ORDER BY messages.created_at ASC
     `;
     
     connection.query(query, (err, results) => {
@@ -425,42 +410,57 @@ app.put('/api/messages/:id', authenticateToken, (req, res) => {
     const messageId = req.params.id;
     const { message } = req.body;
 
-    // Проверка на наличие текста сообщения
-    if (!message) {
+    // Проверка на пустое сообщение
+    if (!message || !message.trim()) {
         return res.status(400).send('Сообщение не может быть пустым');
     }
 
-    // Обновление сообщения в базе данных
+    // Обновление сообщения
     connection.query('UPDATE messages SET message = ? WHERE id = ? AND user_id = ?', [message, messageId, req.userId], (err, results) => {
         if (err) {
-            console.error(err);
+            console.error('Ошибка при обновлении сообщения:', err);
             return res.status(500).send('Ошибка при обновлении сообщения');
         }
+
+        // Проверяем, было ли обновлено какое-либо сообщение
         if (results.affectedRows === 0) {
             return res.status(404).send('Сообщение не найдено или у вас нет прав для его редактирования');
         }
+
+        // Уведомляем всех клиентов об обновлении сообщения
+        io.emit('messageUpdated', { id: messageId, newMessage: message });
+
         res.status(200).send('Сообщение обновлено');
     });
 });
 
 
-// Удаление сообщения
+
+
+
+
+
+// Обработка удаления сообщения на сервере
 app.delete('/api/messages/:id', authenticateToken, (req, res) => {
     const messageId = req.params.id;
 
-    // Удаление сообщения из базы данных
     connection.query('DELETE FROM messages WHERE id = ? AND user_id = ?', [messageId, req.userId], (err, results) => {
         if (err) {
-            console.error(err);
+            console.error('Ошибка при удалении сообщения:', err);
             return res.status(500).send('Ошибка при удалении сообщения');
         }
+
+        // Проверяем, было ли удалено какое-либо сообщение
         if (results.affectedRows === 0) {
             return res.status(404).send('Сообщение не найдено или у вас нет прав для его удаления');
         }
+
+        // Уведомляем всех клиентов об удалении сообщения
+        io.emit('messageDeleted', messageId);
+        
         res.status(200).send('Сообщение удалено');
     });
 });
-
 
 
 
