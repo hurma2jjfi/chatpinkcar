@@ -16,7 +16,11 @@ import FlagMessage from './modals/FlagMessage';
 import VoiceMessageInput from './voice/VoiseMessage';
 import ProfileIcon from './profile/ProfileIcon';
 import SimpleMenu from './profile/SimpleMenu';
-
+import UploadImage from '../assets/UploadImage.svg';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import IconButton from '@mui/material/IconButton'; // Import IconButton
+import CloseIcon from '@mui/icons-material/Close'; // Import Close icon
 
 const socket = io('http://127.0.0.1:3000');
 
@@ -34,7 +38,101 @@ function Room() {
     const [users, setUsers] = useState([]);
     const [username, setUsername] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [uploadedImage, setUploadedImage] = useState(null);
+    const [isModalOpenUpload, setIsModalOpenUpload] = useState(false);
+    const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+    const [isClosing, setIsClosing] = useState(false);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [loadingProgress, setLoadingProgress] = useState(0); // New state for loading progress
+    const [isLoading, setIsLoading] = useState(false);
+
+
+    const openPreviewModal = () => {
+        setIsPreviewModalOpen(true);
+    };
+
+    const closePreviewModal = () => {
+        setIsPreviewModalOpen(false);
+    };
+
+    const openModalUpload = () => {
+        setIsModalOpenUpload(true);
+    };
     
+    const closeModalUpload = () => {
+        setIsModalOpenUpload(false);
+        setImagePreviewUrl('');
+        setUserId('');
+        setLoadingProgress(0); // Reset progress on close
+        setIsLoading(false); // Reset loading state on close
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        setSelectedFile(file);
+
+        // Создаем URL для предварительного просмотра изображения
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreviewUrl(previewUrl);
+
+            // Start loading simulation
+            setIsLoading(true); // Start loading
+            setLoadingProgress(0); // Reset progress
+
+            // Simulate loading progress
+            const interval = setInterval(() => {
+                setLoadingProgress((prev) => {
+                    if (prev >= 100) {
+                        clearInterval(interval);
+                        return 100;
+                    }
+                    return prev + 10; // Increment progress
+                });
+            }, 100); // Adjust timing as needed
+
+            // Simulate the end of loading after a short delay
+            setTimeout(() => {
+                clearInterval(interval);
+                setIsLoading(false); // Stop loading when done
+            }, 1000); // Total time for loading simulation
+        }
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!selectedFile) {
+            toast.error('Пожалуйста, выберите файл для загрузки.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        formData.append('userId', userId);
+        
+        try {
+            const response = await axios.post('http://localhost:3000/upload-image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            setUploadedImage(response.data.image);
+            setSelectedFile(null);
+            setUserId('');
+            setImagePreviewUrl(null); // Сбрасываем предварительный просмотр
+            toast.success('Изображение успешно загружено!');
+
+            // Запускаем анимацию закрытия модального окна
+            setIsClosing(true);
+            setTimeout(closeModalUpload, 500); // Закрываем модал через 500 мс (время анимации)
+        } catch (error) {
+            console.error('Ошибка при загрузке изображения:', error);
+            toast.error('Ошибка при загрузке изображения.');
+        }
+    };
 
     useEffect(() => {
         const fetchUserId = async () => {
@@ -143,9 +241,18 @@ function Room() {
                 ...newMessage,
                 created_at: new Date().toISOString(),
             };
+
+            // Проверяем, является ли отправитель текущим пользователем
+            if (newMessage.user_id !== userId) {
+                toast.info(`Новое сообщение от ${newMessage.username}: ${newMessage.message}`);
+            } else {
+                toast.info(`Вы: ${newMessage.message}`); // Отображаем сообщение без имени
+            }
+
             setMessages((prevMessages) => [...prevMessages, formattedMessage]);
-            toast.info(`Новое сообщение: ${newMessage.message}`);
         });
+        
+        
 
         socket.on('messageViewed', (messageId) => {
             setMessages((prevMessages) =>
@@ -374,6 +481,15 @@ function Room() {
                         ))}
 
                         <p className="text-gray-700">{msg.message}</p>
+
+                        {msg.image && (
+        <img 
+            src={msg.image} 
+            alt="Uploaded" 
+            className="max-w-2/3 h-2/3 mt-2 rounded"
+            onClick={openPreviewModal}
+        />
+    )} 
                         <FlagMessage message={msg} />
                         <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
                     </div>
@@ -426,8 +542,11 @@ function Room() {
             /></div>
                 <div className="btn__wrapper">
                 <div className="flex__btn__voic">
-                <button title='Send message...' className='btn__send' onClick={handleSendMessage}><div className="flex-send-btn"><img className='svg__icon__send' src={SendBtn}/></div></button></div>
-                <VoiceMessageInput message={message} setMessage={setMessage} /></div>
+                <button title='Send message...' className='btn__send' onClick={handleSendMessage}><div className="flex-send-btn"><img className='svg__icon__send' src={SendBtn}/></div></button>
+                </div>
+                <VoiceMessageInput message={message} setMessage={setMessage} />
+                <button title='Upload image...' className='btn__send' onClick={openModalUpload}><div className="flex-send-btn"><img className='svg__icon__upload' src={UploadImage}/></div></button>
+                </div>
             </div>
             
 
@@ -437,7 +556,63 @@ function Room() {
             <SimpleMenu/>
             </div>
             
-            
+
+
+
+
+
+            {isModalOpenUpload && ( 
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close" onClick={closeModalUpload}><IconButton onClick={closeModalUpload} style={{ float: 'right', color: '#000', opacity: '70%' }}>
+                            <CloseIcon /> 
+                        </IconButton></span>
+                        <form onSubmit={handleSubmit}>
+                            <label className="custom-file-upload">
+                                <UploadFileIcon /> 
+                                <input
+                                    className="file"
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleFileChange} 
+                                    required 
+                                />
+                                Выберите файл
+                            </label>
+                            
+                            <input
+                                className='display-none'
+                                type="text" 
+                                placeholder="Введите ваш ID" 
+                                value={userId} 
+                                onChange={(e) => setUserId(e.target.value)} 
+                                required 
+                            />
+                            
+                            {isLoading ? ( // Show loading indicator while loading
+                                <div className="loading-indicator" style={{ marginTop: '10px' }}>
+                                    <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
+                                </div>
+                            ) : (
+                                imagePreviewUrl && ( // Show image if available
+                                    <img 
+                                        src={imagePreviewUrl} 
+                                        alt="Preview" 
+                                        className="image-preview" 
+                                        style={{ maxWidth: '100%', marginTop: '10px', transition: 'opacity 0.5s ease-in-out' }} 
+                                        onLoad={(e) => e.currentTarget.style.opacity = 1} // Fade in effect
+                                        onError={(e) => e.currentTarget.style.display = 'none'} // Hide on error
+                                    />
+                                )
+                            )}
+                            
+                            <button className='upload' type="submit">
+                                {<CloudUploadIcon className='up__ui' />}Загрузить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         
 
 

@@ -20,13 +20,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Настройка multer для загрузки файлов
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Папка для сохранения загруженных файлов
+        console.log('Destination folder:', path.join(__dirname, 'uploads')); // Логируем папку назначения
+        cb(null, path.join(__dirname, 'uploads')); // Используем __dirname для абсолютного пути
     },
     filename: (req, file, cb) => {
+        console.log('Uploading file:', file.originalname); // Логируем имя загружаемого файла
         cb(null, Date.now() + path.extname(file.originalname)); // Уникальное имя файла
     }
 });
 
+// Инициализация multer
 const upload = multer({ storage });
 
 // Создание HTTP сервера и настройка Socket.IO
@@ -249,9 +252,9 @@ io.on('connection', (socket) => {
                 console.error("Ошибка при получении имени пользователя:", err);
                 return;
             }
-
+    
             const username = results[0].username;
-
+    
             connection.query(
                 'INSERT INTO messages (user_id, message) VALUES (?, ?)',
                 [userId, message],
@@ -260,14 +263,16 @@ io.on('connection', (socket) => {
                         console.error("Ошибка при сохранении сообщения в БД:", err);
                         return;
                     }
-
-                    const newMessage = { id: Date.now(), user_id: userId, message, username }; // Добавляем username
+    
+                    // Создаем объект нового сообщения с username
+                    const newMessage = { id: Date.now(), user_id: userId, message, username };
                     io.emit('receiveMessage', newMessage); // Отправляем новое сообщение всем клиентам
                     console.log(`Saved message to DB and emitted to clients: ${newMessage}`);
                 }
             );
         });
     });
+    
 
     // Когда пользователь отключается
     socket.on('disconnect', () => {
@@ -499,6 +504,69 @@ app.post('/api/messages/:id/view', authenticateToken, (req, res) => {
         });
     });
 });
+
+
+
+
+app.post('/upload-image', upload.single('image'), async (req, res) => {
+    console.log('Request received:', req.body);
+    console.log('Uploaded file:', req.file);
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'Изображение не загружено' });
+    }
+
+    console.log(`File uploaded successfully: ${req.file.filename}`);
+    
+    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
+    const userId = req.body.userId;
+    const messageText = req.body.message;
+
+    try {
+        const result = await connection.query(
+            'INSERT INTO messages (user_id, message, image) VALUES (?, ?, ?)',
+            [userId, messageText, imageUrl]
+        );
+
+        const newMessage = { id: result.insertId, userId, message: messageText, image: imageUrl };
+
+        // Emit the new message to all connected clients
+        io.emit('newMessage', newMessage);
+
+        res.json(newMessage);
+    } catch (error) {
+        console.error('Error saving message to DB:', error);
+        res.status(500).json({ error: 'Ошибка при сохранении сообщения' });
+    }
+});
+
+
+
+
+app.post('/send-message', async (req, res) => {
+    const { userId, message } = req.body;
+    const imageUrl = req.file ? req.file.path : null;
+
+    try {
+        const result = await connection.query(
+            'INSERT INTO messages (user_id, message, image) VALUES (?, ?, ?)',
+            [userId, message, imageUrl]
+        );
+
+        const newMessage = { id: result.insertId, userId, message, image: imageUrl };
+
+        // Emit the new message to all connected clients
+        io.emit('newMessage', newMessage);
+
+        res.json(newMessage);
+    } catch (error) {
+        console.error('Error saving message to DB:', error);
+        res.status(500).json({ error: 'Ошибка при сохранении сообщения' });
+    }
+});
+
+
+
 
 
 
