@@ -56,13 +56,16 @@ const SimpleMenu = () => {
     };
 
     const handleLogout = () => {
-        toast.loading('Выход из системы');
+        toast.loading('Выход из системы', {
+            theme: "dark", 
+            className: 'dark-toast', 
+        });
         localStorage.removeItem('token');
         setTimeout(() => navigate('/login'), 2000);
     };
 
     const handleSettings = () => {
-        setIsModalOpen(true); // Open the modal
+        setIsModalOpen(true); 
     };
 
     return (

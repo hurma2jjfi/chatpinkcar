@@ -1,0 +1,54 @@
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    transition: width 0.3s ease-in-out;
+    width: 40px; /* Ширина кружка */
+
+  }
+  
+  .search-bar.focused {
+    width: 200px; /* Ширина при фокусе */
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    z-index: 1;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .search-bar.focused .search-icon {
+    opacity: 0.5; /* Прозрачность иконки при фокусе */
+  }
+  
+  .search-input {
+    width: 0; /* Начальная ширина инпута */
+    padding: 10px;
+    padding-left: 40px; /* Отступ для иконки */
+    border: none;
+    border-radius: 50px;
+    background-color: #0e0e0e; /* Фон инпута */
+    transition: width 0.3s ease-in-out;
+
+  }
+  
+  .search-bar.focused .search-input {
+    width: calc(100% - 40px); /* Ширина инпута при фокусе */
+  }
+  
+  .search-input:focus {
+    outline: none;
+  }
+  
+  .msg__contain {
+    padding: 10px;
+    border-bottom: 0.5px dashed #d6d3d3;
+    max-width: 160px; 
+  }
+  
+  
+  
+
+  
+  

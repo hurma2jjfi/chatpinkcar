@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import MaskGroup from '../assets/MaskGroup.svg';
 import backSvg from '../assets/back.svg';
 import { Link } from 'react-router-dom'; 
-import LayerMask from '../assets/LayerMask.png';
+
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -120,20 +120,19 @@ function Register() {
   return (
     <div className="container__onner">
       <div className='container'>
-        <img className='logo' src={MaskGroup} alt="Logo" />
         <div className="back" title='Назад'>
           <Link to="/"> 
             <img src={backSvg} alt="Back" />
           </Link>
         </div>
-        {/* <div className="layerMask"><img src={LayerMask} alt="Layer Mask" /></div> */}
-        <h1 className='sayhello'>Register in the <span>Pinkcar</span></h1>
         <div className="wrapper__form">
           <form onSubmit={handleRegister}>
-            <div className="input__container">
+            <div className="input__container__reg">
+            <img className='logo' src={MaskGroup} alt="Logo" />
+            <h1 className='pinkTitle'>Register in the <span>Pinkcar</span></h1>
               <input 
                 type="email" 
-                className='field__one' 
+                className='field__email' 
                 placeholder='Email*' 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -141,7 +140,7 @@ function Register() {
               />
               <input 
                 type="text" 
-                className='field__two' 
+                className='field__user' 
                 placeholder='Username*' 
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
@@ -149,7 +148,7 @@ function Register() {
               />
               <input 
                 type="password" 
-                className='field__three' 
+                className='field__password' 
                 placeholder='Password*' 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
@@ -188,9 +187,23 @@ function Register() {
               )}
 
               <button className='brn__register' type="submit">Register</button>
+              
+<div className="forgotPass__wrap flex items-center justify-center mt-3">
+            <div className="wrap flex items-center space-x-4"> {/* Используем flex и space-x для равного расстояния */}
+                <Link to="/login" className="text-center link">
+                    <h1>Already have an account?</h1>
+                </Link>
+            </div>
+        </div>
+
+
+
             </div>
           </form>
         </div>
+
+
+        
         <ToastContainer />
       </div>
     </div>

@@ -1,0 +1,85 @@
+.wrapper__nav {
+    display: flex;
+    gap: 15px;
+    justify-content: end;
+    margin-right: 130px;
+    margin-top: 20px;
+  }
+
+  .typing-text {
+  font-size: 18px;
+  font-family: monospace;
+}
+
+.typing {
+  white-space: nowrap;
+  overflow: hidden;
+  
+}
+
+.caret {
+  border-right: .15em solid #ffffff; 
+  animation: blink-caret .75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #333; }
+}
+
+.typing-text {
+  font-size: 48px;
+  font-family: monospace;
+}
+
+.typing {
+  white-space: pre-wrap; 
+}
+
+.caret {
+  border-right: .15em solid #ffffff;
+  animation: blink-caret .75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #ffffff; }
+}
+
+.parent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh; 
+}
+
+.typing-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px;
+}
+
+.login, .register {
+  text-decoration: none;
+  color: inherit;
+  position: relative; /* Добавляем позиционирование */
+}
+
+.login::after, .register::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: #ffffff; /* Цвет линии */
+  transition: width 0.2s ease-in-out;
+}
+
+.login:hover::after, .register:hover::after {
+  width: 100%; /* Заполняем линию на всю ширину */
+}
+
+

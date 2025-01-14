@@ -288,18 +288,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// Функция для обновления статуса пользователя в БД
-const updateUserStatusInDB = (userId, status) => {
-    connection.query(
-        'UPDATE users SET is_online = ? WHERE id = ?',
-        [status, userId],
-        (err) => {
-            if (err) {
-                console.error("Ошибка при обновлении статуса пользователя в БД:", err);
-            }
-        }
-    );
-};
+
 
 
 // Регистрация пользователя с загрузкой аватарки
@@ -331,37 +320,27 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
-    if (!email || !email.includes('@')) {
-        return res.status(400).send('Некорректный email. Убедитесь, что он содержит "@"');
-    }
-
-    if (!password) {
-        return res.status(400).send('Пароль не может быть пустым');
-    }
-
     connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Ошибка при проверке пользователя');
         }
-
         if (results.length === 0) {
             return res.status(400).send('Неверный email или пароль');
         }
 
         const user = results[0];
-
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res.status(400).send('Неверный email или пароль');
         }
 
         // Создание токена после успешного входа
-        const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' }); 
-
-        res.status(200).json({ message: 'Успешный вход', token }); 
+        const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
+        res.status(200).json({ message: 'Успешный вход', token });
     });
 });
+
 
 app.post('/change-password', async (req, res) => {
     console.log(req.body); // Логируем тело запроса
@@ -565,6 +544,107 @@ app.post('/send-message', async (req, res) => {
     }
 });
 
+
+
+app.post('/status/online', authenticateToken, (req, res) => {
+    const userId = req.userId; 
+    const { isOnline } = req.body; 
+
+    if (!userId) {
+        console.error("ID пользователя не найден. Запрос не может быть обработан.");
+        return res.status(400).send('ID пользователя не предоставлен');
+    }
+
+    console.log(`Обновление статуса онлайн для userId: ${userId}, isOnline: ${isOnline}`);
+
+    connection.query('UPDATE users SET is_online = ? WHERE id = ?', [isOnline ? 1 : 0, userId], (err, results) => {
+        if (err) {
+            console.error("Ошибка при обновлении статуса пользователя:", err);
+            return res.status(500).send('Ошибка при обновлении статуса');
+        }
+    
+        console.log("Результаты обновления:", results);
+        
+        if (results.affectedRows === 0) {
+            console.warn("Статус не обновлен. Возможно, пользователь не найден.");
+            return res.status(404).send('Пользователь не найден');
+        }
+    
+        res.status(200).send('Статус пользователя обновлен');
+    });    
+});
+
+
+app.post('/status/activity', authenticateToken, (req, res) => {
+    const userId = req.userId; 
+    const { lastActivity } = req.body; 
+
+    if (!userId) {
+        console.error("ID пользователя не найден. Запрос не может быть обработан.");
+        return res.status(400).send('ID пользователя не предоставлен');
+    }
+
+    console.log(`Обновление времени последней активности для userId: ${userId}, lastActivity: ${lastActivity}`);
+
+    connection.query('UPDATE users SET last_activity = ? WHERE id = ?', [lastActivity, userId], (err, results) => {
+        if (err) {
+            console.error("Ошибка при обновлении времени активности пользователя:", err);
+            return res.status(500).send('Ошибка при обновлении времени активности');
+        }
+    
+        console.log("Результаты обновления:", results);
+        
+        if (results.affectedRows === 0) {
+            console.warn("Время активности не обновлено. Возможно, пользователь не найден.");
+            return res.status(404).send('Пользователь не найден');
+        }
+    
+        res.status(200).send('Время последней активности обновлено');
+    });    
+});
+
+
+app.get('/status/current', authenticateToken, (req, res) => {
+    const userId = req.userId;
+
+    if (!userId) {
+        return res.status(400).send('ID пользователя не предоставлен');
+    }
+
+    connection.query('SELECT is_online FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error("Ошибка при получении статуса пользователя:", err);
+            return res.status(500).send('Ошибка при получении статуса');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Пользователь не найден');
+        }
+
+        // Возвращаем статус как true/false
+        res.json({ isOnline: results[0].is_online === 1 });
+    });
+});
+
+
+
+app.get('/users', authenticateToken, (req, res) => {
+    connection.query('SELECT id, username, is_online FROM users', (err, results) => {
+        if (err) {
+            console.error("Ошибка при получении списка пользователей:", err);
+            return res.status(500).send('Ошибка при получении списка пользователей');
+        }
+
+        // Преобразуем результаты в нужный формат
+        const users = results.map(user => ({
+            id: user.id,
+            username: user.name,
+            isOnline: user.is_online === 1 // Преобразуем 1 в true и 0 в false
+        }));
+
+        res.json(users);
+    });
+});
 
 
 

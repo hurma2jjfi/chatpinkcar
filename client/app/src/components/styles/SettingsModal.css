@@ -70,3 +70,26 @@ h2 {
     outline: none; /* Remove default outline */
 }
 
+.field__new__pass {
+    width: 110%;
+    padding: 10px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: transparent;
+    color: #333;
+    transition: border-color 0.3s ease;
+}
+
+.field__new__pass:focus {
+    border-color: #0056b3; 
+    outline: none; 
+}
+
+label {
+    margin-top: 5px;
+}
+
+.btn__close__settings {
+    margin-top: 20px;
+}

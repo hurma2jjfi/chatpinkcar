@@ -1,0 +1,15 @@
+#online-status {
+    position: relative;
+    left: -25px;
+    top: 27px;
+}
+
+.online {
+    width: 11px;
+    height: 11px;
+    background-color: #4bb34b; 
+}
+
+.offline {
+    background-color: red; 
+}

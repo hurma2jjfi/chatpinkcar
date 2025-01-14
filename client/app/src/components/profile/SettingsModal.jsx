@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/SettingsModal.css'; 
 import { ClipLoader } from 'react-spinners'; // Импортируем спиннер
-import { ChromePicker } from 'react-color'; // Импортируем ChromePicker
+
 
 const SettingsModal = ({ isOpen, onClose }) => {
     const [username, setUsername] = useState('');
     const [color, setColor] = useState('#ffffff'); // Цвет по умолчанию
-    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false); // Состояние загрузки
-    const [displayColorPicker, setDisplayColorPicker] = useState(false); // Состояние для показа/скрытия цветового пикара
     const [newPassword, setNewPassword] = useState(''); // Состояние для нового пароля
     const [confirmPassword, setConfirmPassword] = useState(''); // Состояние для подтверждения пароля
     const [userId, setUserId] = useState(null); // Состояние для хранения userId
@@ -81,7 +79,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 console.log(data.message); // Логируем сообщение от сервера
             }
     
-            console.log('Updated Settings:', { username, color, notificationsEnabled });
+            console.log('Updated Settings:', { username });
             
         } catch (error) {
             console.error("Ошибка:", error);
@@ -110,32 +108,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         />
                     </label>
                     <label>
-                        Выберите цвет:
-                        <div 
-                            className='color__picker'
-                            style={{ backgroundColor: color }}
-                            onClick={() => setDisplayColorPicker(!displayColorPicker)} // Переключаем цветовой пикер
-                        />
-                        {displayColorPicker && (
-                            <div className="color-picker-container">
-                                <ChromePicker 
-                                    color={color} 
-                                    onChangeComplete={(color) => setColor(color.hex)} 
-                                />
-                            </div>
-                        )}
-                    </label>
-                    <label>
-                        <input 
-                            type="checkbox" 
-                            checked={notificationsEnabled} 
-                            onChange={() => setNotificationsEnabled(!notificationsEnabled)} 
-                        />
-                        Включить уведомления
-                    </label>
-                    <label>
                         Новый пароль:
                         <input
+                        className='field__new__pass'
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
@@ -145,6 +120,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                     <label>
                         Подтверждение пароля:
                         <input
+                        className='field__username'
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -155,10 +131,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 <button 
                     className='btn__close__settings' 
                     onClick={handleSave} 
-                    disabled={isLoading} // Отключаем кнопку во время загрузки
+                    disabled={isLoading} 
                 >
                     {isLoading ? (
-                        <ClipLoader color="#ffffff" loading={isLoading} size={20} /> // Показываем спиннер
+                        <ClipLoader color="#ffffff" loading={isLoading} size={20} /> 
                     ) : (
                         'Сохранить'
                     )}

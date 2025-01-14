@@ -21,6 +21,10 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import IconButton from '@mui/material/IconButton'; // Import IconButton
 import CloseIcon from '@mui/icons-material/Close'; // Import Close icon
+import UserStatus from './UserStatus';
+import SearchBar from './SearchBar';
+import './styles/SearchBar.css';
+
 
 const socket = io('http://127.0.0.1:3000');
 
@@ -44,9 +48,11 @@ function Room() {
     const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
     const [isClosing, setIsClosing] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-    const [loadingProgress, setLoadingProgress] = useState(0); // New state for loading progress
+    const [loadingProgress, setLoadingProgress] = useState(0); 
     const [isLoading, setIsLoading] = useState(false);
-
+    const [filteredMessages, setFilteredMessages] = useState(messages);
+    // const token = localStorage.getItem('token');
+    // console.log(token);
 
     const openPreviewModal = () => {
         setIsPreviewModalOpen(true);
@@ -256,14 +262,15 @@ function Room() {
 
         socket.on('messageViewed', (messageId) => {
             setMessages((prevMessages) =>
-                prevMessages.map((msg) => {
-                    if (msg.id === messageId) {
-                        return { ...msg, viewed_by: [...(msg.viewed_by || []), userId] };
-                    }
-                    return msg;
-                }),
+              prevMessages.map((msg) => {
+                if (msg.id === messageId) {
+                  return { ...msg, viewed_by: [...(msg.viewed_by || []), userId] };
+                }
+                return msg;
+              }),
             );
-        });
+          });
+          
 
         if (!hasJoinedRoom) {
             toast.success('Вы успешно вошли в комнату чата!');
@@ -362,10 +369,7 @@ function Room() {
         setIsModalOpen(false); // Закрываем модальное окно
     };
     
-    
 
-
-    
     const handleDeleteClick = (messageId) => {
         setMessageToDelete(messageId); // Устанавливаем сообщение для удаления
         setIsModalOpen(true); // Открываем модальное окно
@@ -375,12 +379,6 @@ function Room() {
     const handleEmojiClick = (emojiObject) => {
         setMessage((prev) => prev + emojiObject.emoji);
         setShowEmojiPicker(false);
-    };
-
-    const handleLogout = () => {
-        toast.loading('Выход из системы');
-        localStorage.removeItem('token');
-        setTimeout(() => navigate('/login'), 2000);
     };
 
     const formatTime = (timestamp) => {
@@ -463,38 +461,48 @@ function Room() {
                 <div
                     key={msg.id}
                     className="bg-gray shadow-md rounded-lg p-3 flex flex-col sm:flex-row transition-transform transform hover:scale-105"
-                    style={{ borderLeft: '2px solid rgb(139, 38, 217)' }} 
+                    style={{ borderLeft: '1px solid rgb(139, 38, 217)', borderLeftStyle: 'dashed' }} 
                 >
+                    <div className="avatar__back">
                     <img
-                        className='avatar__img rounded-full w-10 h-10 mb-2 sm:mb-0 sm:mr-3'
+                        className='avatar__img rounded-full w-10 h-10'
                         src={msg.avatar ? `${process.env.REACT_APP_API_URL}/${msg.avatar}` : 'default-avatar.png'}
                         alt="Avatar"
-                    />
-
+                    /></div>
+                    <UserStatus/>
                     <div className="flex-grow">
                         <strong style={{ color: generateColorFromUsername(msg.username) }} className="text-blue-600">{msg.username}</strong>
                         {users.map(user => (
                             <div key={user.id}>
                                 <span>{user.username}</span>
-                                <span className={`status-indicator ${user.online ? 'online' : 'offline'}`}></span>
+                                <span 
+                        className={`status-indicator ${user.is_online ? 'online' : 'offline'}`} 
+                        style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: user.is_online ? 'green' : 'red',
+                            marginLeft: '8px'
+                        }}
+                    ></span>
                             </div>
                         ))}
 
-                        <p className="text-gray-700">{msg.message}</p>
+                        <p className="text-white-700">{msg.message}</p>
 
                         {msg.image && (
         <img 
             src={msg.image} 
             alt="Uploaded" 
             className="max-w-2/3 h-2/3 mt-2 rounded"
-            onClick={openPreviewModal}
+        
         />
     )} 
-                        <FlagMessage message={msg} />
+                        <FlagMessage message={msg} messages={messages} userId={userId} />
                         <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
                     </div>
 
-                    {msg.user_id === userId && ( // Проверяем, является ли текущий пользователь владельцем сообщения
+                    {msg.user_id === userId && ( 
                         editingMessageId === msg.id ? (
                             <form onSubmit={handleEditSubmit} className="flex flex-col mt-2">
                                 <input
@@ -615,6 +623,26 @@ function Room() {
             )}
         
 
+
+        <div className="searchbar__wrap">
+  <SearchBar messages={messages} setFilteredMessages={setFilteredMessages} />
+  {filteredMessages.length > 0 ? (
+    <div>
+      <span className="found-count">Найдено: {filteredMessages.length} сообщений</span>
+      {filteredMessages.map((message) => (
+        <div className='msg__contain' key={message.id}>
+          <span className='span__msg' style={{ color: 'white', fontWeight: 'bold' }}>
+            {message.username}:
+          </span>
+          {' '}
+          {message.message}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className='noMsg'></div>
+  )}
+</div>
 
 
 
