@@ -382,11 +382,46 @@ app.get('/user-id', authenticateToken, (req, res) => {
 
 
 
+app.get('/user-profile', async (req, res) => {
+    const { userId } = req.query;
 
+    if (!userId) {
+        return res.status(400).json({ message: 'Не указан ID пользователя' });
+    }
 
+    try {
+        connection.query(
+            `SELECT 
+                id, 
+                email, 
+                username, 
+                bio, 
+                avatar, 
+                created_at, 
+                is_online, 
+                last_activity 
+            FROM users 
+            WHERE id = ?`, 
+            [userId], 
+            (error, results) => {
+                if (error) {
+                    console.error("Ошибка получения профиля:", error);
+                    return res.status(500).json({ message: 'Ошибка получения профиля' });
+                }
 
+                if (results.length === 0) {
+                    return res.status(404).json({ message: 'Пользователь не найден' });
+                }
 
-
+                const userProfile = results[0];
+                res.status(200).json(userProfile);
+            }
+        );
+    } catch (error) {
+        console.error("Ошибка:", error);
+        res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+    }
+});
 
 
 // Обновление сообщения
@@ -645,6 +680,8 @@ app.get('/users', authenticateToken, (req, res) => {
         res.json(users);
     });
 });
+
+
 
 
 

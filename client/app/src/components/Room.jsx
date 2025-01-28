@@ -624,7 +624,7 @@ function Room() {
         
 
 
-        <div className="searchbar__wrap">
+        {/* <div className="searchbar__wrap">
   <SearchBar messages={messages} setFilteredMessages={setFilteredMessages} />
   {filteredMessages.length > 0 ? (
     <div>
@@ -642,7 +642,7 @@ function Room() {
   ) : (
     <div className='noMsg'></div>
   )}
-</div>
+</div> */}
 
 
 

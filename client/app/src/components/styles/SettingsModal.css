@@ -1,3 +1,11 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+strong {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+} */
+
+
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -54,7 +62,7 @@ h2 {
     z-index: 2; /* Ensure it's above other elements */
 }
 
-.field__username {
+.fild__one {
     width: 100%; /* Full width */
     padding: 10px; /* Padding for better spacing */
     border: 1px solid #007bff; /* Blue border */
@@ -65,13 +73,24 @@ h2 {
     transition: border-color 0.3s ease; /* Smooth transition for border color */
 }
 
-.field__username:focus {
+.fild__new {
+    width: 260px; 
+    padding: 10px; /* Padding for better spacing */
+    border: 1px solid #007bff; /* Blue border */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    background-color: transparent; /* Remove background color */
+    color: #333; /* Text color */
+    transition: border-color 0.3s ease; /* Smooth transition for border color */
+}
+
+.fild__one:focus {
     border-color: #0056b3; /* Darker blue border on focus */
     outline: none; /* Remove default outline */
 }
 
-.field__new__pass {
-    width: 110%;
+.fild__one {
+    width: 100%;
     padding: 10px;
     border: 1px solid #007bff;
     border-radius: 5px;
@@ -81,7 +100,7 @@ h2 {
     transition: border-color 0.3s ease;
 }
 
-.field__new__pass:focus {
+.fild__one:focus {
     border-color: #0056b3; 
     outline: none; 
 }
@@ -93,3 +112,156 @@ label {
 .btn__close__settings {
     margin-top: 20px;
 }
+
+.close__btn__settings {
+    display: flex;
+    justify-content: end;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #f0f2f5;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-content {
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 6px; 
+    background: linear-gradient(to bottom, #5181b8, #4a76a8);
+}
+
+
+.close__btn__settings {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 20px;
+    color: #8c8c8c;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close__btn__settings:hover {
+    color: #2c2c2c;
+}
+
+.text-center {
+    text-align: center;
+    color: #ffffff;
+    margin: 20px 0;
+    font-weight: 500;
+}
+
+.user-profile-info {
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-profile-info div {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+}
+
+.user-profile-info strong {
+    color: #1d1d1d;
+    font-weight: 500;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.settings-form label {
+    display: flex;
+    flex-direction: column;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.fild__new,
+.fild__one {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-top: 5px;
+    font-size: 16px;
+    background-color: white;
+    transition: border-color 0.3s;
+}
+
+
+.fild__new {
+    width: 360px;
+}
+
+.fild__new:focus,
+.fild__one:focus {
+    outline: none;
+    border-color: #5181b8;
+}
+
+.btn__close__settings {
+    width: 100%;
+    padding: 12px;
+    background-color: #5181b8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn__close__settings:hover {
+    background-color: #4a76a8;
+}
+
+.btn__close__settings:disabled {
+    background-color: #000000;
+    cursor: not-allowed;
+}
+
+.profile-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+
+
