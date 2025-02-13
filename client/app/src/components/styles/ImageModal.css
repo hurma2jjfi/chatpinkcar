@@ -1,0 +1,57 @@
+.image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: background-color 0.3s ease; /* плавное изменение фона */
+}
+
+.image-modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease; /* плавное изменение масштаба */
+}
+
+.image-modal-content.zoomed {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 24px;
+    z-index: 10;
+}
+
+.image-modal-image {
+    display: block;
+    max-width: 100%;
+    max-height: 90vh;
+    transition: transform 0.3s ease;
+}
+
+.image-modal-image.zoomed {
+    max-width: none;
+    max-height: none;
+    width: 100vw;
+    height: auto;
+    transform: scale(1.5);
+}
+

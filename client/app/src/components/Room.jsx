@@ -23,8 +23,10 @@ import IconButton from '@mui/material/IconButton'; // Import IconButton
 import CloseIcon from '@mui/icons-material/Close'; // Import Close icon
 import UserStatus from './UserStatus';
 import SearchBar from './SearchBar';
+import ReplyIcon from '@mui/icons-material/Reply';
 import './styles/SearchBar.css';
-
+import ParticleAnimation from './hundle/ParticleAnimation';
+import ImageModals from './modals/ImageModals';
 
 const socket = io('http://127.0.0.1:3000');
 
@@ -51,8 +53,20 @@ function Room() {
     const [loadingProgress, setLoadingProgress] = useState(0); 
     const [isLoading, setIsLoading] = useState(false);
     const [filteredMessages, setFilteredMessages] = useState(messages);
+    const [replyingToMessage, setReplyingToMessage] = useState(null);
+    const [activeMessageId, setActiveMessageId] = useState(null);
+    const [showParticleAnimation, setShowParticleAnimation] = useState(false);
+    const [particleMessageId, setParticleMessageId] = useState(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [selectedImageUrl, setSelectedImageUrl] = useState('');
+
     // const token = localStorage.getItem('token');
     // console.log(token);
+
+    const handleImageClick = (imageUrl) => {
+        setSelectedImageUrl(imageUrl);
+        setIsImageModalOpen(true);
+    };
 
     const openPreviewModal = () => {
         setIsPreviewModalOpen(true);
@@ -165,9 +179,17 @@ function Room() {
         fetchUserId();
     }, []);
 
+    
+    const handleReplyClick = (messageObject) => {
+        setReplyingToMessage(messageObject); // Устанавливаем объект сообщения для ответа
+        setActiveMessageId(messageObject.id); // Используем msg.id как идентификатор
+    };
 
-
-
+    const resetActiveMessage = () => {
+        setActiveMessageId(null);
+    };
+    
+    
 
     useEffect(() => {
         const originalTitle = `Чат - ${messages.length} ${messages.length === 1 ? 'сообщение' : 'сообщений'}`;
@@ -355,12 +377,20 @@ function Room() {
                     headers: { Authorization: `Bearer ${token}` },
                 });
     
+                // Запускаем анимацию удаления
+                setParticleMessageId(messageToDelete);
+                setShowParticleAnimation(true);
+    
                 // Отправляем событие через сокет
                 socket.emit('messageDeleted', messageToDelete);
     
-                // Удаляем сообщение из состояния
-                setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== messageToDelete));
-                toast.success('Сообщение удалено!');
+                // Удаляем сообщение из состояния после завершения анимации
+                setTimeout(() => {
+                    setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== messageToDelete));
+                    setShowParticleAnimation(false);
+                    toast.success('Сообщение удалено!');
+                }, 1000); // Длительность анимации
+    
             } catch (error) {
                 console.error(error);
                 toast.error('Ошибка при удалении сообщения: ' + (error.response?.data || error.message));
@@ -461,7 +491,14 @@ function Room() {
                 <div
                     key={msg.id}
                     className="bg-gray shadow-md rounded-lg p-3 flex flex-col sm:flex-row transition-transform transform hover:scale-105"
-                    style={{ borderLeft: '1px solid rgb(139, 38, 217)', borderLeftStyle: 'dashed' }} 
+                    id='block__msg'
+                    style={{
+                        borderLeft: '1px solid rgb(139, 38, 217)',
+                        borderLeftStyle: 'dashed',
+                        backgroundColor: activeMessageId === msg.id ? 'rgba(139, 38, 217, 0.3)' : '', 
+                        width: activeMessageId === msg.id ? '100%' : '', 
+                    }}
+                     
                 >
                     <div className="avatar__back">
                     <img
@@ -469,6 +506,7 @@ function Room() {
                         src={msg.avatar ? `${process.env.REACT_APP_API_URL}/${msg.avatar}` : 'default-avatar.png'}
                         alt="Avatar"
                     /></div>
+                    
                     <UserStatus/>
                     <div className="flex-grow">
                         <strong style={{ color: generateColorFromUsername(msg.username) }} className="text-blue-600">{msg.username}</strong>
@@ -495,12 +533,28 @@ function Room() {
             src={msg.image} 
             alt="Uploaded" 
             className="max-w-2/3 h-2/3 mt-2 rounded"
+            onClick={() => handleImageClick(msg.image)}
         
         />
     )} 
                         <FlagMessage message={msg} messages={messages} userId={userId} />
                         <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
                     </div>
+
+
+                    {
+    msg.user_id !== userId && (
+        <button
+            onClick={() => handleReplyClick(msg)}
+            className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
+        >
+            <ReplyIcon />
+        </button>
+    )
+}
+
+
+
 
                     {msg.user_id === userId && ( 
                         editingMessageId === msg.id ? (
@@ -516,6 +570,13 @@ function Room() {
                             </form>
                         ) : (
                             <div className="message__actions flex space-x-1 mt-10">
+
+
+
+
+                
+
+
                                 <button 
                                     onClick={() => handleEditClick(msg)} 
                                     className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
@@ -538,24 +599,68 @@ function Room() {
 
 
 
-            <div className='input__container'>
-                <div className="input__flex">
-                <button className='btn__stikers' onClick={() => setShowEmojiPicker(!showEmojiPicker)}><img className='stik' src={Stikers}></img></button>
-                <input
-                className='field__msg'
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message..."
-            /></div>
-                <div className="btn__wrapper">
-                <div className="flex__btn__voic">
-                <button title='Send message...' className='btn__send' onClick={handleSendMessage}><div className="flex-send-btn"><img className='svg__icon__send' src={SendBtn}/></div></button>
-                </div>
-                <VoiceMessageInput message={message} setMessage={setMessage} />
-                <button title='Upload image...' className='btn__send' onClick={openModalUpload}><div className="flex-send-btn"><img className='svg__icon__upload' src={UploadImage}/></div></button>
-                </div>
+            <div className="input__container">
+    
+    <div className="input__flex">
+        {replyingToMessage && (
+        <div className="reply-preview">
+            <div className="reply-preview-content">
+                <strong>{replyingToMessage.username}</strong>
+                {replyingToMessage.image && (
+                    <img 
+                        src={replyingToMessage.image} 
+                        alt={`Изображение ${replyingToMessage.username}`} 
+                        width={40} // Установите нужную ширину
+                        height={40} // Установите нужную высоту
+                    />
+                )}
+                <p>{replyingToMessage.message}</p>
             </div>
+            <button 
+                className="cancel-reply-btn" 
+                onClick={() => {
+                    setReplyingToMessage(null);
+                    resetActiveMessage();}} 
+            >
+                <CloseIcon />
+            </button>
+        </div>
+    )}
+
+<div className="input__wrap" style={{
+    display: 'flex',
+    alignItems: 'center'
+}}>
+    <input
+        className='field__msg'
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder={replyingToMessage ? `Ответить @${replyingToMessage.username}` : 'Сообщение...'}
+    />
+    <button className='btn__stikers' onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+        <img className='stik' src={Stikers} alt="Stickers" />
+    </button>
+</div>
+
+        
+    </div>
+    <div className="btn__wrapper">
+        <div className="flex__btn__voic">
+            <button title='Send message...' className='btn__send' onClick={handleSendMessage}>
+                <div className="flex-send-btn">
+                    <img className='svg__icon__send' src={SendBtn} alt="Send" />
+                </div>
+            </button>
+        </div>
+        <VoiceMessageInput message={message} setMessage={setMessage} />
+        <button title='Upload image...' className='btn__send' onClick={openModalUpload}>
+            <div className="flex-send-btn">
+                <img className='svg__icon__upload' src={UploadImage} alt="Upload" />
+            </div>
+        </button>
+    </div>
+</div>
             
 
             <div className="username__profile">
@@ -564,9 +669,12 @@ function Room() {
             <SimpleMenu/>
             </div>
             
-
-
-
+            {showParticleAnimation && (
+    <ParticleAnimation
+        messageId={particleMessageId}
+        onAnimationEnd={() => setShowParticleAnimation(false)}
+    />
+)}
 
 
             {isModalOpenUpload && ( 
@@ -575,7 +683,9 @@ function Room() {
                         <span className="close" onClick={closeModalUpload}><IconButton onClick={closeModalUpload} style={{ float: 'right', color: '#000', opacity: '70%' }}>
                             <CloseIcon /> 
                         </IconButton></span>
+                        
                         <form onSubmit={handleSubmit}>
+                        <div className="flexColumn">
                             <label className="custom-file-upload">
                                 <UploadFileIcon /> 
                                 <input
@@ -596,7 +706,7 @@ function Room() {
                                 onChange={(e) => setUserId(e.target.value)} 
                                 required 
                             />
-                            
+                            </div>
                             {isLoading ? ( // Show loading indicator while loading
                                 <div className="loading-indicator" style={{ marginTop: '10px' }}>
                                     <div className="progress-bar" style={{ width: `${loadingProgress}%` }} />
@@ -646,7 +756,12 @@ function Room() {
 
 
 
-
+{isImageModalOpen && (
+    <ImageModals 
+        imageUrl={selectedImageUrl} 
+        onClose={() => setIsImageModalOpen(false)} 
+    />
+)}
 
 
 
