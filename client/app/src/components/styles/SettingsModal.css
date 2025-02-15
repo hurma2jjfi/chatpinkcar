@@ -263,5 +263,29 @@ label {
     height: 100px;
 }
 
+.gift {
+    position: absolute;
+    top: 270px;
+    left: 140px;
+}
+
+.gift img {
+    pointer-events: none;
+}
+
+/* Add this CSS rule */
+.circular-avatar {
+    width: 200px; /* Adjust size as needed */
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.circular-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 
 

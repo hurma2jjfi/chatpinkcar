@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,6 +27,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import './styles/SearchBar.css';
 import ParticleAnimation from './hundle/ParticleAnimation';
 import ImageModals from './modals/ImageModals';
+
 
 const socket = io('http://127.0.0.1:3000');
 
@@ -59,7 +60,85 @@ function Room() {
     const [particleMessageId, setParticleMessageId] = useState(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [selectedImageUrl, setSelectedImageUrl] = useState('');
+    const [giftData, setGiftData] = useState(null);
+    const messagesEndRef = useRef(null);
+    const [typingUsers, setTypingUsers] = useState({});
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeout = useRef(null);
 
+
+    const handleInputChange = (e) => {
+        setMessage(e.target.value);
+        
+        if (!isTyping) {
+          socket.emit('typing', userId); // Убедитесь, что userId существует
+          setIsTyping(true);
+        }
+      
+        clearTimeout(typingTimeout.current);
+        typingTimeout.current = setTimeout(() => {
+          socket.emit('stopTyping', userId); // userId должен быть актуальным
+          setIsTyping(false);
+        }, 1500);
+      };
+
+      useEffect(() => {
+        socket.on('userTyping', ({ userId, username }) => {
+          setTypingUsers(prev => ({ ...prev, [userId]: username }));
+        });
+      
+        socket.on('userStoppedTyping', ({ userId }) => {
+          setTypingUsers(prev => {
+            const newState = { ...prev };
+            delete newState[userId];
+            return newState;
+          });
+        });
+      
+        return () => {
+          socket.off('userTyping');
+          socket.off('userStoppedTyping');
+        };
+      }, []);
+
+      const TypingIndicator = () => {
+        const typingList = Object.values(typingUsers);
+    
+        if (typingList.length === 0) return null;
+      
+        return (
+            <div className="typing-indicator">
+            <div className="hacker-text">
+              {typingList.map((username, index) => (
+                <span key={username} className="typing-username">
+                  {username}
+                  {index < typingList.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+              <span className="typing-dots">
+                {typingList.length === 1 ? ' печатает' : ' печатают'}
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+              </span>
+            </div>
+          </div>
+        );
+      };
+
+
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollTo({
+          top: messagesEndRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      };
+    
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages]);
+    
     // const token = localStorage.getItem('token');
     // console.log(token);
 
@@ -269,16 +348,18 @@ function Room() {
                 ...newMessage,
                 created_at: new Date().toISOString(),
             };
-
+        
             // Проверяем, является ли отправитель текущим пользователем
             if (newMessage.user_id !== userId) {
                 toast.info(`Новое сообщение от ${newMessage.username}: ${newMessage.message}`);
             } else {
                 toast.info(`Вы: ${newMessage.message}`); // Отображаем сообщение без имени
             }
-
+        
             setMessages((prevMessages) => [...prevMessages, formattedMessage]);
         });
+        
+        
         
         
 
@@ -306,10 +387,12 @@ function Room() {
     }, [userId, navigate, hasJoinedRoom]); // Добавляем зависимость от hasJoinedRoom
 
     const handleSendMessage = () => {
-        if (message.trim() && userId) {
+        if (message.trim() && userId && currentUser) {
             const newMessage = {
                 userId,
                 message,
+                username: currentUser.username, // Добавляем имя пользователя
+                avatar: currentUser.avatar, // Добавляем аватар пользователя
                 created_at: new Date().toISOString(),
             };
             socket.emit('sendMessage', newMessage);
@@ -318,6 +401,7 @@ function Room() {
             toast.error('Сообщение не может быть пустым');
         }
     };
+    
 
     const handleEditClick = (msg) => {
         setEditingMessageId(msg.id);
@@ -470,8 +554,88 @@ function Room() {
             .catch(error => console.error('Ошибка:', error));
     }, []);
 
+
+    const fetchUserGift = async (userId) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/user-gift/${userId}`);
+            
+            if (!response.ok) {
+                throw new Error('Ошибка получения данных о подарке');
+            }
+    
+            const data = await response.json();
+            setGiftData(data);
+        } catch (error) {
+            console.error("Ошибка загрузки данных о подарке:", error);
+        }
+    };
+
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/user-id', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+                    },
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении user ID');
+                }
+    
+                const data = await response.json();
+                setUserId(data.userId); // Сохраняем userId в состоянии
+                console.log('User ID:', data.userId); // Выводим userId в консоль
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        };
+    
+        fetchUserId();
+    }, []);
+    
+    // Загружаем данные о подарке, когда userId доступен
+    useEffect(() => {
+        if (userId) {
+            fetchUserGift(userId); // Вызываем функцию для загрузки данных о подарке
+        }
+    }, [userId]); // Зависимость от userId
     
 
+    const getTimeLabel = (timestamp) => {
+        const today = new Date();
+        const messageDate = new Date(timestamp);
+    
+        const isToday = messageDate.toDateString() === today.toDateString();
+        const isYesterday = new Date(today.setDate(today.getDate() - 1)).toDateString() === messageDate.toDateString();
+    
+        if (isToday) {
+            return 'Сегодня';
+        } else if (isYesterday) {
+            return 'Вчера';
+        } else {
+            return messageDate.toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+        }
+    };
+
+    const groupMessagesByDate = (messages) => {
+        const groupedMessages = {};
+        messages.forEach((msg) => {
+            const date = new Date(msg.created_at).toDateString();
+            if (!groupedMessages[date]) {
+                groupedMessages[date] = [];
+            }
+            groupedMessages[date].push(msg);
+        });
+        return groupedMessages;
+    };
+
+    
     
 
 
@@ -486,114 +650,122 @@ function Room() {
 
             </div>
 
-            <div className="grid space-y-4 max-w-2xl mx-auto">
-            {messages.map((msg) => (
+            <div className="grid space-y-4 max-w-2xl mx-auto" ref={messagesEndRef}>
+            {Object.entries(groupMessagesByDate(messages)).map(([date, messagesForDate]) => (
+    <div key={date}>
+        {/* Временная метка */}
+        <div className="time-label">
+            {getTimeLabel(messagesForDate[0].created_at)}
+        </div>
+
+        {/* Отображение сообщений */}
+        {messagesForDate.map((msg) => {
+            const isMyMessage = msg.user_id === userId;
+            return (
                 <div
                     key={msg.id}
-                    className="bg-gray shadow-md rounded-lg p-3 flex flex-col sm:flex-row transition-transform transform hover:scale-105"
-                    id='block__msg'
+                    className={`message-container ${isMyMessage ? 'my' : 'other'} visible`}
                     style={{
-                        borderLeft: '1px solid rgb(139, 38, 217)',
-                        borderLeftStyle: 'dashed',
-                        backgroundColor: activeMessageId === msg.id ? 'rgba(139, 38, 217, 0.3)' : '', 
-                        width: activeMessageId === msg.id ? '100%' : '', 
+                        backgroundColor: activeMessageId === msg.id ? 'rgba(139, 38, 217, 0.3)' : '',
                     }}
-                     
                 >
-                    <div className="avatar__back">
-                    <img
-                        className='avatar__img rounded-full w-10 h-10'
-                        src={msg.avatar ? `${process.env.REACT_APP_API_URL}/${msg.avatar}` : 'default-avatar.png'}
-                        alt="Avatar"
-                    /></div>
-                    
-                    <UserStatus/>
-                    <div className="flex-grow">
-                        <strong style={{ color: generateColorFromUsername(msg.username) }} className="text-blue-600">{msg.username}</strong>
-                        {users.map(user => (
-                            <div key={user.id}>
-                                <span>{user.username}</span>
-                                <span 
-                        className={`status-indicator ${user.is_online ? 'online' : 'offline'}`} 
-                        style={{
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            backgroundColor: user.is_online ? 'green' : 'red',
-                            marginLeft: '8px'
-                        }}
-                    ></span>
+                    {!isMyMessage && (
+                        <div className="avatar__back">
+                            <img
+                                className="avatar__img"
+                                src={msg.avatar ? `http://localhost:3000/${msg.avatar}` : 'default-avatar.png'}
+                                alt="Аватар"
+                            />
+                        </div>
+                    )}
+
+                    <div className="message-content">
+                        {!isMyMessage && (
+                            <div className="username-label" style={{ color: generateColorFromUsername(msg.username) }}>
+                                {msg.username}
                             </div>
-                        ))}
+                        )}
 
-                        <p className="text-white-700">{msg.message}</p>
-
-                        {msg.image && (
-        <img 
-            src={msg.image} 
-            alt="Uploaded" 
-            className="max-w-2/3 h-2/3 mt-2 rounded"
-            onClick={() => handleImageClick(msg.image)}
-        
-        />
-    )} 
-                        <FlagMessage message={msg} messages={messages} userId={userId} />
-                        <span className="text-gray-500 text-xs">{formatTime(msg.created_at)}</span>
-                    </div>
-
-
-                    {
-    msg.user_id !== userId && (
-        <button
-            onClick={() => handleReplyClick(msg)}
-            className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
-        >
-            <ReplyIcon />
-        </button>
-    )
-}
-
-
-
-
-                    {msg.user_id === userId && ( 
-                        editingMessageId === msg.id ? (
-                            <form onSubmit={handleEditSubmit} className="flex flex-col mt-2">
+                        {/* Форма редактирования */}
+                        {editingMessageId === msg.id ? (
+                            <form onSubmit={handleEditSubmit} className="edit-form">
                                 <input
                                     type="text"
                                     value={editingMessageText}
                                     onChange={(e) => setEditingMessageText(e.target.value)}
                                     required
-                                    className="border border-gray-300 rounded p-1 focus:outline-none focus:ring focus:ring-blue-500"
+                                    className="edit-input"
+                                    placeholder="Редактировать сообщение..."
                                 />
-                                <button type="submit" className="bg-blue-500 text-white rounded mt-1 text-sm hover:bg-blue-600 transition">Save</button>
+                                <button type="submit" className="save-button">
+                                    Сохранить
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingMessageId(null)}
+                                    className="cancel-button"
+                                >
+                                    Отмена
+                                </button>
                             </form>
                         ) : (
-                            <div className="message__actions flex space-x-1 mt-10">
+                            <>
+                                {msg.message && <p>{msg.message}</p>}
+                                {msg.image && (
+                                    <img 
+                                        src={msg.image} 
+                                        alt="Content" 
+                                        onClick={() => handleImageClick(msg.image)}
+                                    />
+                                )}
+                            </>
+                        )}
 
+                        <span className="message-time">
+  {formatTime(msg.created_at)}
+  {isMyMessage && (
+    <span className={`message-status ${msg.viewed_by?.length > 0 ? 'read' : 'sent'}`}>
+      ✓
+    </span>
+  )}
+</span>
+                    </div>
 
+                    <div className="message__actions">
+                        {isMyMessage ? (
+                            editingMessageId !== msg.id && (
+                                <>
+                                    <button onClick={() => handleEditClick(msg)}>
+                                        <EditIcon fontSize="small" />
+                                    </button>
+                                    <button onClick={() => handleDeleteClick(msg.id)}>
+                                        <DeleteIcon fontSize="small" />
+                                    </button>
+                                </>
+                            )
+                        ) : (
+                            <button onClick={() => handleReplyClick(msg)}>
+                                <ReplyIcon fontSize="small" />
+                            </button>
+                        )}
 
-
-                
-
-
-                                <button 
-                                    onClick={() => handleEditClick(msg)} 
-                                    className="flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-9 h-9 hover:bg-gray-300 transition"
-                                >
-                                    <EditIcon className="m-0" />  
-                                </button>
-                                <button 
-                                    onClick={() => handleDeleteClick(msg.id)} 
-                                    className="flex items-center justify-center bg-red-400 text-white rounded-full w-9 h-9 hover:bg-red-500 transition"
-                                >
-                                    <DeleteIcon className="m-0" />  
-                                </button>
+                        {isMyMessage && giftData && giftData.svg_data && (
+                            <div className="gift-container">
+                                <img 
+                                    src={`${giftData.svg_data}`} 
+                                    alt="Подарок" 
+                                    className="gift-image"
+                                    width={30}
+                                    height={30}
+                                />
                             </div>
-                        )
-                    )}
+                        )}
+                    </div>
                 </div>
-            ))}
+            );
+        })}
+    </div>
+))}
 </div>
 
 
@@ -635,7 +807,12 @@ function Room() {
         className='field__msg'
         type="text"
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleInputChange} // Изменено!
+  onBlur={() => { // Добавлено для обработки потери фокуса
+    clearTimeout(typingTimeout.current);
+    socket.emit('stopTyping', userId);
+    setIsTyping(false);
+  }}
         placeholder={replyingToMessage ? `Ответить @${replyingToMessage.username}` : 'Сообщение...'}
     />
     <button className='btn__stikers' onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
@@ -763,7 +940,7 @@ function Room() {
     />
 )}
 
-
+<TypingIndicator />
 
 <div className="emoji__picker">
             {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiClick} />}</div>
@@ -776,6 +953,9 @@ function Room() {
                 onConfirm={handleConfirmDelete} 
             />
         </div>
+
+
+
     );
 }
 

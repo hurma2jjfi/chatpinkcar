@@ -7,6 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SettingsModal from '../profile/SettingsModal';
+import { Link } from 'react-router-dom';
+
 
 const SimpleMenu = () => {
     const navigate = useNavigate();
@@ -79,6 +81,10 @@ const SimpleMenu = () => {
                         <li onClick={handleSettings}>
                             <SettingsIcon style={{ marginRight: '8px' }} /> 
                             Настройки
+                        </li>
+                        <li>
+                            
+                            <Link to='/gifts'>Подарки</Link>
                         </li>
                         <li onClick={handleLogout}>
                             <LogoutIcon style={{ marginRight: '8px' }} />

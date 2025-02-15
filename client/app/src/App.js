@@ -5,6 +5,7 @@ import Home from './components/Home';
 import Room from './components/Room';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import Gifts from './components/Gifts';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/room" element={<Room />} />
         <Route path="/forgot-password" element={<ForgotPassword/>} />
         <Route path="/reset-password/:token" element={<ResetPassword/>} />
+        <Route path="/gifts" element={<Gifts />} />
       </Routes>
     </BrowserRouter>
   );

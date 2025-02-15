@@ -37,7 +37,6 @@ html, body {
     position: relative;
     left: 30px;
     overflow-x: hidden;
-    padding-right: 15px;
 }
 
 
@@ -87,7 +86,18 @@ html, body {
     z-index: -1;
 }
 
-
+.time-label {
+    text-align: center;
+    margin: 10px 0;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    font-size: 0.9em;
+    color: #666;
+    display: inline-block;
+    margin-left: 50%;
+    transform: translateX(-50%);
+}
 
 .room__container {
     text-align: center; /* Центрирование заголовка */
@@ -203,6 +213,296 @@ span {
     box-shadow: 0 0 8px rgba(255, 64, 129, 0.8);
 }
 
+.gift-container {
+    position: absolute;
+    left: 2.5rem;
+    top: 2.7rem;
+}
+
+/* Основные стили контейнера сообщений */
+.grid {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  /* Общие стили сообщения */
+  .message-container {
+    display: flex;
+    max-width: 80%;
+    gap: 12px;
+    position: relative;
+  }
+  
+  /* Сообщения других пользователей */
+  .message-container.other {
+    align-self: flex-start;
+    flex-direction: row;
+  }
+  
+  /* Мои сообщения */
+  .message-container.my {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+  
+  /* Аватар */
+  .avatar__back {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e0e0e0;
+  }
+  
+  .avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Контент сообщения */
+  .message-content {
+    padding: 12px 16px;
+    border-radius: 18px;
+    position: relative;
+    max-width: 100%;
+    word-break: break-word;
+  }
+  
+  /* Стили для сообщений других */
+  .other .message-content {
+    background: #363636;
+    border-top-left-radius: 4px;
+    color: white;
+  }
+  
+  /* Стили для моих сообщений */
+  .my .message-content {
+    background: #8b26d9;
+    border-top-right-radius: 4px;
+    color: white;
+  }
+  
+  /* Имя пользователя */
+  .username-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  
+  /* Время сообщения */
+  .message-time {
+    font-size: 0.75rem;
+    color: #cccccc;
+    margin-top: 4px;
+    display: block;
+    text-align: right;
+  }
+  
+  /* Действия с сообщениями */
+  .message__actions {
+    position: absolute;
+    bottom: -25px;
+    display: none;
+    gap: 8px;
+  }
+  
+  .message-container:hover .message__actions {
+    display: flex;
+  }
+  
+  /* Для моих сообщений - действия справа */
+  .my .message__actions {
+    right: 0;
+    flex-direction: row-reverse;
+  }
+  
+  /* Для других - слева */
+  .other .message__actions {
+    left: 0;
+  }
+  
+  /* Стили для ответов */
+  .reply-preview {
+    background: rgba(139, 38, 217, 0.1);
+    border-left: 3px solid #8b26d9;
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 8px;
+  }
+  
+  /* Инпут ввода сообщений */
+  .input__container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  
+  /* Анимации */
+  .message-container {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  .message-container.my {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  
+  .message-container.other {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  
+  .message-container.visible {
+    transform: translateX(0);
+    opacity: 1;
+    width: 100%;
+    margin: 20px 0 0 0;
+  }
+
+  .edit-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: transparent; /* Фон формы */
+}
+
+.edit-input {
+    width: 100%;
+    padding: 10px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    border-radius: 3px;
+}
+
+.typing-indicator {
+  padding: 8px 12px;
+  border-radius: 15px;
+  margin: 5px;
+  font-size: 0.9em;
+  color: #666;
+  animation: fadeIn 0.3s ease-in;
+  text-align: center;
+
+}
+
+  .dot {
+    opacity: 0;
+    animation: dot-typing 1.5s infinite;
+    
+  }
+  
+  .dot:nth-child(1) {
+    animation-delay: 0s;
+  }
+  
+  .dot:nth-child(2) {
+    animation-delay: 0.5s;
+  }
+  
+  .dot:nth-child(3) {
+    animation-delay: 1s;
+  }
+  
+
+  
+  /* Анимация появления точек */
+  @keyframes dot-typing {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999; 
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+.message-status.sent {
+    color: #999; 
+  }
+  
+  .message-status.read {
+    color: #4caf50; 
+  }
+
+.save-button,
+.cancel-button {
+    margin-top: 10px;
+}
+
+.save-button,
+.cancel-button {
+    padding: 8px 16px; /* Поля вокруг текста */
+    border-radius: 5px; /* Закругленные углы */
+    background-color: #1d1d1d; /* Темный фон */
+    color: white; /* Белый текст */
+    border: none; /* Удаление стандартной рамки */
+    width: 120px; /* Фиксированная ширина для обеих кнопок */ 
+}
+
+
+.save-button:hover,
+.cancel-button:hover {
+    background-color: #333333; /* При наведении темнее фон */
+}
+
+
+
+
+
+  
+  /* Иконки действий */
+  .message__actions button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .message__actions button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+  
+  /* Изображения в сообщениях */
+  .message-content img {
+    max-width: 300px;
+    border-radius: 12px;
+    margin-top: 8px;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+  }
+  
+  .message-content img:hover {
+    transform: scale(1.02);
+  }
 
 .btn__send {
     width: 58px;

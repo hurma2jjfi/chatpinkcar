@@ -12,6 +12,24 @@ const SettingsModal = ({ isOpen, onClose }) => {
     const [userId, setUserId] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(false);
+    const [giftData, setGiftData] = useState(null);
+    
+
+
+    const fetchUserGift = async (userId) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/user-gift/${userId}`);
+            
+            if (!response.ok) {
+                throw new Error('Ошибка получения данных о подарке');
+            }
+    
+            const data = await response.json();
+            setGiftData(data);
+        } catch (error) {
+            console.error("Ошибка загрузки данных о подарке:", error);
+        }
+    };
 
     // Функция для получения userId из API
     const fetchUserId = async () => {
@@ -70,6 +88,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 const id = await fetchUserId();
                 if (id) {
                     fetchUserProfile(id);
+                    fetchUserGift(id); // Загружаем данные о подарке
                 }
             };
             loadUserData();
@@ -117,6 +136,10 @@ const SettingsModal = ({ isOpen, onClose }) => {
         }
     };
 
+
+
+
+    
     return (
         <div className="modal-overlay">
             <div className="modal-content">
@@ -134,9 +157,25 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 ) : userProfile && (
                     <div className="user-profile-info">
                        
+
+
                        
-                       <ProfileSettingsIcon username={username} />
                        
+                       {/* <ProfileSettingsIcon username={username} /> */}
+                       {userProfile.avatar && (
+    <div className="circular-avatar">
+        <img src={`http://localhost:3000/${userProfile.avatar}`} alt={username + "'s Avatar"} />
+    </div>
+)}
+
+                       
+
+                       {giftData && (
+    <div className='gift'>
+    <img src={`${giftData.svg_data}`} alt="Подарок" width={50} height={50} />
+    </div>
+)}
+
                         <div className='name__user'>
                             <strong>Имя пользователя:</strong> {userProfile.username}
                         </div>

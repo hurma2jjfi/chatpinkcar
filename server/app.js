@@ -173,23 +173,26 @@ app.get('/api/current-user', authenticateToken, (req, res) => {
 });
 
 
+
 // Получение всех сообщений с именами пользователей
 app.get('/api/messages', (req, res) => {
     const query = `
-        SELECT messages.*, users.username 
-        FROM messages 
-        JOIN users ON messages.user_id = users.id 
-        ORDER BY messages.created_at ASC
-    `;
+    SELECT messages.*, users.username, users.avatar
+    FROM messages 
+    JOIN users ON messages.user_id = users.id 
+    ORDER BY messages.created_at ASC LIMIT 100;
+`;
+
     
     connection.query(query, (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Ошибка при получении сообщений');
         }
-        res.status(200).json(results); // Возвращаем список сообщений с именами пользователей
+        res.status(200).json(results); 
     });
 });
+
 
 
 app.get('/api/users', authenticateToken, (req, res) => {
@@ -245,16 +248,19 @@ io.on('connection', (socket) => {
     });
 
     // Обработка отправки сообщения
-    socket.on('sendMessage', ({ userId, message }) => {
-        // Получаем username из базы данных
-        connection.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
+    socket.on('sendMessage', (newMessage) => {
+        const { userId, message } = newMessage;
+    
+        // Получаем данные пользователя, включая аватар, из базы данных
+        connection.query('SELECT username, avatar FROM users WHERE id = ?', [userId], (err, results) => {
             if (err || results.length === 0) {
-                console.error("Ошибка при получении имени пользователя:", err);
+                console.error("Ошибка при получении данных пользователя:", err);
                 return;
             }
     
-            const username = results[0].username;
+            const { username, avatar } = results[0];
     
+            // Сохраняем сообщение в базе данных (если это необходимо)
             connection.query(
                 'INSERT INTO messages (user_id, message) VALUES (?, ?)',
                 [userId, message],
@@ -264,14 +270,22 @@ io.on('connection', (socket) => {
                         return;
                     }
     
-                    // Создаем объект нового сообщения с username
-                    const newMessage = { id: Date.now(), user_id: userId, message, username };
-                    io.emit('receiveMessage', newMessage); // Отправляем новое сообщение всем клиентам
-                    console.log(`Saved message to DB and emitted to clients: ${newMessage}`);
+                    // Создаем объект нового сообщения с полной информацией о пользователе
+                    const newMessageWithUserData = {
+                        id: Date.now(),
+                        user_id: userId,
+                        message,
+                        username,
+                        avatar, // Добавляем аватар
+                    };
+    
+                    io.emit('receiveMessage', newMessageWithUserData); // Отправляем сообщение всем клиентам
+                    console.log(`Saved message to DB and emitted to clients: ${newMessageWithUserData}`);
                 }
             );
         });
     });
+    
     
 
     // Когда пользователь отключается
@@ -286,6 +300,28 @@ io.on('connection', (socket) => {
             users.splice(userIndex, 1); // Удалите пользователя из массива при отключении
         }
     });
+
+
+    socket.on('typing', (userId) => {
+        console.log('Typing event received for userId:', userId); // Логирование
+        connection.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
+          if (err || !results.length) {
+            console.error('User not found for typing event');
+            return;
+          }
+          const username = results[0].username;
+          socket.broadcast.emit('userTyping', { userId, username });
+        });
+      });
+    
+      socket.on('stopTyping', (userId) => {
+        console.log('StopTyping event received for userId:', userId); // Логирование
+        socket.broadcast.emit('userStoppedTyping', { userId });
+      });
+
+    
+
+
 });
 
 
@@ -680,6 +716,130 @@ app.get('/users', authenticateToken, (req, res) => {
         res.json(users);
     });
 });
+
+
+
+
+app.get('/gifts', async (req, res) => {
+    try {
+        const query = 'SELECT id, name, description, svg_data AS svg_path, price FROM gifts';
+
+        connection.query(query, (err, results) => {
+            if (err) {
+                console.error("Ошибка при выполнении запроса:", err);
+                return res.status(500).json({ 
+                    message: 'Ошибка при получении подарков',
+                    errorDetails: err.message
+                 });
+            }
+
+            if (!results || results.length === 0) {
+                return res.status(200).json({ message: 'Нет доступных подарков', data: [] });
+            }
+
+            // Преобразуем результаты в нужный формат
+            const gifts = results.map(gift => ({
+                id: gift.id,
+                name: gift.name,
+                description: gift.description,
+                svgPath: gift.svg_path,
+                price: gift.price
+            }));
+
+            res.json({ message: 'Данные получены успешно', data: gifts });
+        });
+    } catch (error) {
+        console.error(error);
+        
+        res.status(500).json({ 
+            message:'Ошибка при получении подарков',
+            errorDetails: error.message ? error.message : 'Неизвестная ошибка'
+         });
+    }
+});
+
+
+
+// вот этот юз относится к этому запросу, это парсер чтоб не забыть пометочка себе
+
+app.use(bodyParser.json());
+app.post('/payment/success', async (req, res) => {
+    try {
+        console.log('Тело запроса:', req.body); 
+
+        const { userId, giftId } = req.body;
+
+        if (!userId || !giftId) {
+            return res.status(400).json({ message: 'Недостаточно данных для обработки' });
+        }
+
+        
+        const query = 'INSERT INTO user_gifts SET ?';
+        
+        connection.query(query, { user_id: userId, gift_id: giftId }, (err) => {
+            if (err) {
+                console.error("Ошибка при добавлении подарка:", err);
+                return res.status(500).json({ 
+                    message: 'Ошибка при добавлении подарка',
+                    errorDetails: err.message
+                 });
+            }
+
+            res.json({ message: 'Подарок успешно добавлен' });
+        });
+    } catch (error) {
+        console.error(error);
+        
+        res.status(500).json({ 
+            message:'Ошибка при обработке платежа',
+            errorDetails: error.message ? error.message : 'Неизвестная ошибка'
+         });
+    }
+});
+
+app.get('/api/user-gift/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    // Предположим использование MySQL
+    const query = `
+        SELECT g.*
+        FROM gifts g
+        JOIN user_gifts ug ON g.id = ug.gift_id
+        WHERE ug.user_id = ?
+    `;
+
+    connection.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching gift:', err);
+            return res.status(500).send('Error fetching gift');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Gift not found');
+        }
+
+        const giftData = results[0];
+        
+        // Возвращаем данные о подарке
+        res.json(giftData);
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
