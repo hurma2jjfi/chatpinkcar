@@ -221,8 +221,7 @@ span {
 
 /* Основные стили контейнера сообщений */
 .grid {
-    padding: 20px;
-    max-width: 800px;
+    max-width: 690px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -443,11 +442,11 @@ span {
   }
   
 .message-status.sent {
-    color: #999; 
+    color: #999; /* Цвет галочки для отправленных, но не прочитанных сообщений */
   }
   
   .message-status.read {
-    color: #4caf50; 
+    color: #4caf50; /* Цвет галочки для прочитанных сообщений (например, зеленый) */
   }
 
 .save-button,
@@ -845,4 +844,122 @@ right: 80px;
     background-color: #4bb34b;
 }
 
+
+@media (max-width: 768px) {
+
+    .emoji__picker {
+        position: absolute;
+        top: 300px;
+        right: 0;
+        left: 70px;
+    }
+
+    .room {
+        padding: 10px;
+    }
+
+    .room__container {
+        padding: 5px;
+    }
+
+    .input__flex {
+        flex-direction: column;
+    }
+
+    .field__msg, .btn__stikers {
+        margin-right: 0;
+        margin-top: 10px;
+        margin-bottom: -260px;
+    }
+
+    .field__msg {
+        width: 400px;
+    }
+
+    .btn__wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn__send {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .grid {
+        margin: 0 0 0 0;
+      }
+
+
+      
+      
+
+
+}
+
+@media (max-width: 480px) {
+    .room {
+        padding: 5px;
+    }
+
+    .username__profile {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .username {
+        font-size: 16px;
+    }
+}
+
+
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+        display: flex;
+        justify-content: center;
+    }
+
+
+}
+
+@media (max-width: 600px) {
+    .username__profile {
+        display: flex;
+        flex-direction: column;
+        margin: 10px 0 0 0;
+    }
+}
+
+@media (min-width: 768px) {
+    .input__container {
+        left: 50%; /* Возвращаем центрирование на больших экранах */
+        transform: translateX(-50%); /* Корректируем позицию */
+        bottom: 1.25rem; /* Возвращаем стандартный отступ снизу */
+        width: auto; /* Автоматическая ширина */
+        max-width: 800px; /* Максимальная ширина контейнера */
+        padding: 0 20px; /* Убираем отступы */
+        box-sizing: border-box;
+    }
+
+    .input__container > * {
+        flex: none; /* Отменяем растягивание элементов */
+        min-width: auto; /* Сбрасываем минимальную ширину */
+    }
+}
+
+@media (min-width: 768px) {
+    .field__msg {
+        width: 631px;
+        height: 38px;
+        font-size: 24px;
+        padding: 25px 60px;
+    }
+
+    .btn__send, .micro {
+        width: 58px;
+        height: 58px;
+    }
+}
 

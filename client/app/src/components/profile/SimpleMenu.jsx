@@ -39,22 +39,17 @@ const SimpleMenu = () => {
         position: 'absolute',
         top: '139%',
         left: '-50px',
-        backgroundColor: 'rgba(48, 48, 52, 0.7)', 
-        backdropFilter: 'blur(50px)', 
-        borderRadius: '16px', 
-        border: '1px solid rgba(255, 255, 255, 0.1)', 
-        boxShadow: `
-            rgba(0, 0, 0, 0.1) 0px 32px 16px,
-            rgba(0, 0, 0, 0.1) 0px 16px 8px,
-            rgba(0, 0, 0, 0.1) 0px 8px 4px,
-            rgba(0, 0, 0, 0.1) 0px 4px 2px,
-            rgba(0, 0, 0, 0.1) 0px 2px 1px
-        `,
-        minWidth: '10rem', 
-        paddingBlock: '0.5rem', 
-        paddingInline: '0.5rem', 
+        background: 'linear-gradient(145deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95))',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: 'rgba(0, 0, 0, 0.3) 0px 4px 16px',
+        minWidth: '10rem',
+        paddingBlock: '0.5rem',
+        paddingInline: '0.5rem',
         opacity: fade ? 1 : 0,
-        transition: 'opacity 0.3s ease-in-out'
+        transform: fade ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out'
     };
 
     const handleLogout = () => {

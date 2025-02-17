@@ -129,39 +129,48 @@ function Register() {
           <form onSubmit={handleRegister}>
             <div className="input__container__reg">
             <img className='logo' src={MaskGroup} alt="Logo" />
-            <h1 className='pinkTitle'>Register in the <span>Pinkcar</span></h1>
-              <input 
-                type="email" 
-                className='field__email' 
-                placeholder='Email*' 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                style={{ borderColor: emailValid ? '' : 'red' }} // Conditional styling
-              />
-              <input 
-                type="text" 
-                className='field__user' 
-                placeholder='Username*' 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-                style={{ borderColor: usernameValid ? '' : 'red' }} // Conditional styling
-              />
-              <input 
-                type="password" 
-                className='field__password' 
-                placeholder='Password*' 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                style={{ borderColor: passwordValid ? '' : 'red' }} // Conditional styling
-              />
-              <input 
-                type="password" 
-                className='field__four' 
-                placeholder='Confirm password*' 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                style={{ borderColor: confirmPasswordValid ? '' : 'red' }} // Conditional styling
-              />
+            <div className="cont__titl">
+            <h1 className='pinkTitle'>Register in the <span>Pinkcar</span></h1></div>
+            <div className="input-wrapper">
+                        <input
+                            type="email"
+                            placeholder=" "
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            style={{ borderColor: emailValid ? '' : 'red' }}
+                        />
+                        <label>Email*</label>
+                    </div>
+                    <div className="input-wrapper">
+                        <input
+                            type="text"
+                            placeholder=" "
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            style={{ borderColor: usernameValid ? '' : 'red' }}
+                        />
+                        <label>Username*</label>
+                    </div>
+                    <div className="input-wrapper">
+                        <input
+                            type="password"
+                            placeholder=" "
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            style={{ borderColor: passwordValid ? '' : 'red' }}
+                        />
+                        <label>Password*</label>
+                    </div>
+                    <div className="input-wrapper">
+                        <input
+                            type="password"
+                            placeholder=" "
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            style={{ borderColor: confirmPasswordValid ? '' : 'red' }}
+                        />
+                        <label>Confirm Password*</label>
+                    </div>
               <textarea 
                 placeholder='Biography*' 
                 className='textarea__bio' 

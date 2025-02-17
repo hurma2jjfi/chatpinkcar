@@ -1,64 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Karantina:wght@300;400;700&display=swap');
 
-
 .karantina-light {
     font-family: "Karantina", serif;
     font-weight: 300;
     font-style: normal;
-  }
-  
-  .karantina-regular {
+}
+
+.karantina-regular {
     font-family: "Karantina", serif;
     font-weight: 400;
     font-style: normal;
-  }
-  
-  .karantina-bold {
+}
+
+.karantina-bold {
     font-family: "Karantina", serif;
     font-weight: 700;
     font-style: normal;
-  }
-  
-  body {
+}
+
+body {
     margin: 0;
     padding: 0;
-    height: 100%;
+    height: 100vh;
     overflow: hidden;
-  }
-
-body, input, button {
-    background: #212121;
-    color: #fff;
+    background: #212121; /* Основной цвет (60%) */
+    color: #fff; /* Акцентный цвет (10%) */
     font-family: "Karantina", sans-serif;
 }
 
 .sayHello {
     font-size: 64px;
-    margin: 21px 0px 57px;
+    margin: 21px 0 57px;
     font-weight: inherit;
-    margin-left: -63px;
-  }
-  
-  .sayHello span {
-    color: #FF0B8F;
-  }
-  
-.field__one {
-  width: 356px;
-  height: 52px;
-  background: none;
-  border: 1px solid #fff;
-  border-radius: 4px;
-  color: #fff;
-  outline: none;
-  padding: 0px;
-  font-weight: lighter;
-  font-size: 24px;
-  padding: 0px 0px 0px 20px; /* Добавлено padding-left для смещения текста */
-  }
-  
-  
-  .field__two {
+    text-align: center;
+}
+
+.sayHello span {
+    color: #FF0B8F; /* Вторичный цвет (30%) */
+}
+
+.input-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-wrapper input {
     width: 356px;
     height: 52px;
     background: none;
@@ -66,46 +52,74 @@ body, input, button {
     border-radius: 4px;
     color: #fff;
     outline: none;
-    padding: 0px;
     font-weight: lighter;
     font-size: 24px;
-    padding: 0px 0px 0px 20px; /* Добавлено padding-left для смещения текста */
-  }
+    padding: 0 20px;
+    transition: border-color 0.3s ease;
+}
 
-  .submit__btn {
+.input-wrapper input:focus {
+    border-color: #FF0B8F; /* Цвет границы при фокусе */
+}
+
+
+
+.input-wrapper label {
+    position: absolute;
+    top: 40%;
+    left: 20px;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.input-wrapper input:focus + label,
+.input-wrapper input:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: 16px;
+    color: #FF0B8F;
+    background: #212121;
+    padding: 0 5px;
+    transform: translateY(4);
+}
+
+.submit__btn {
     width: 358px;
     height: 52px;
-    background-color: #000;
+    background-color: #FF0B8F; /* Вторичный цвет (30%) */
+    border: none;
     border-radius: 4px;
     color: #fff;
     cursor: pointer;
-    padding: 0;
     font-weight: bold;
     font-size: 24px;
     margin-top: 20px;
-  }
+    transition: background-color 0.3s ease;
+}
 
+.submit__btn:hover {
+    background-color: #e00a7d; /* Немного темнее для эффекта наведения */
+}
 
 .logo__flex {
     display: flex;
     justify-content: center;
     margin-top: 230px;
-    margin-left: -35px;
 }
 
 .title__flex {
-display: flex;
-justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 .flex__fields {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    align-items: center;
 }
-
-
-
 
 .flex__form {
     display: flex;
@@ -115,51 +129,76 @@ justify-content: center;
 .center__wrapo {
     display: flex;
     justify-content: center;
-    margin-left: 63px;
 }
 
 .wrapper {
-    display: grid; /* Используем Grid для центрирования */
-    justify-content: center; /* Центрируем по горизонтали */
-    align-content: center; /* Центрируем по вертикали */
-    height: calc(100vh - 460px); /* Высота блока равна высоте окна просмотра минус отступы (230px сверху и снизу) */
-    margin-top: 100px; /* Отступ сверху */
-  }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 460px);
+    margin-top: 100px;
+}
 
-  .back {
+.back {
     position: absolute;
     top: 40px;
     left: 60px;
     cursor: pointer;
-  }
+    color: #fff; /* Акцентный цвет (10%) */
+}
 
-  .layerMask {
+.layerMask {
     position: absolute;
     top: 0;
     right: 0;
     z-index: -1;
-  }
-  
+}
 
 .link {
-  position: relative;
-  text-decoration: none; /* Убираем стандартное подчеркивание */
-  color: inherit; /* Наследуем цвет текста */
+    position: relative;
+    text-decoration: none;
+    color: inherit;
 }
 
 .link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0; /* Позиционируем подчеркивание внизу */
-  height: 1px; /* Высота линии */
-  background-color: rgb(255, 255, 255); /* Цвет линии */
-  transform: scaleX(0); /* Изначально скрываем линию */
-  transition: transform 0.3s ease; /* Плавный переход */
-  opacity: 30%;
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.3); /* Полупрозрачная линия */
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
 .link:hover::after {
-  transform: scaleX(1); /* Показываем линию при наведении */
+    transform: scaleX(1);
+}
+
+.forgotPass__wrap {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.forgotPass__wrap .wrap {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.forgotPass__wrap .link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.forgotPass__wrap .link:hover {
+    color: #FF0B8F;
+}
+
+label {
+  font-weight: 400;
 }

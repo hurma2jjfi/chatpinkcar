@@ -45,11 +45,46 @@ ul li {
 
 .three-dots {
     cursor: pointer;
-    font-size: 24px; 
-    margin-left: -10px;
-    transition: transform 0.3s ease-in-out;
+    font-size: 24px;
+    color: #ffffff;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+
 .three-dots:hover {
-    transform: scale(0.8); 
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0.9);
+    opacity: 0.8;
 }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu {
+    animation: slideUp 0.3s ease forwards;
+}
+

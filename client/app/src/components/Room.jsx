@@ -27,7 +27,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import './styles/SearchBar.css';
 import ParticleAnimation from './hundle/ParticleAnimation';
 import ImageModals from './modals/ImageModals';
-
+import ScrollToBottomButton from './ScrollBottom';
 
 const socket = io('http://127.0.0.1:3000');
 
@@ -65,6 +65,7 @@ function Room() {
     const [typingUsers, setTypingUsers] = useState({});
     const [isTyping, setIsTyping] = useState(false);
     const typingTimeout = useRef(null);
+    const [unseenMessagesCount, setUnseenMessagesCount] = useState(0);
 
 
     const handleInputChange = (e) => {
@@ -635,7 +636,15 @@ function Room() {
         return groupedMessages;
     };
 
-    
+    const handleScroll = () => {
+        const container = messagesEndRef.current;
+        if (container) {
+          const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+          if (isBottom) {
+            setUnseenMessagesCount(0);
+          }
+        }
+      };
     
 
 
@@ -650,7 +659,7 @@ function Room() {
 
             </div>
 
-            <div className="grid space-y-4 max-w-2xl mx-auto" ref={messagesEndRef}>
+            <div className="grid space-y-4 max-w-2xl" ref={messagesEndRef} onScroll={handleScroll}>
             {Object.entries(groupMessagesByDate(messages)).map(([date, messagesForDate]) => (
     <div key={date}>
         {/* Временная метка */}
@@ -841,7 +850,6 @@ function Room() {
             
 
             <div className="username__profile">
-            <ProfileIcon username={username} />
             <div className="username">{username}</div>
             <SimpleMenu/>
             </div>
@@ -952,6 +960,13 @@ function Room() {
                 onClose={() => setIsModalOpen(false)} 
                 onConfirm={handleConfirmDelete} 
             />
+
+            <ScrollToBottomButton 
+  messages={messages}
+  userId={userId}
+  messagesEndRef={messagesEndRef}
+  scrollToBottom={scrollToBottom}
+/>
         </div>
 
 

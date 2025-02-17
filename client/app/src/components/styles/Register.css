@@ -72,7 +72,6 @@ textarea {
   color: #fff;
 }
 
-/* Стили для состояния при наведении */
 .field__five:hover {
   border-color: #ccc; /* Цвет границы при наведении */
 }
@@ -91,11 +90,20 @@ textarea {
   font-weight: lighter;
   font-size: 24px;
   padding: 5px 0px 0px 20px;
-  box-sizing: border-box; 
+  box-sizing: border-box;
+  margin-top: 20px;
 }
 
 .upload-label:hover {
   border-color: #ccc; 
+}
+
+.cont__titl {
+  margin-bottom: 50px;
+}
+
+.avatar-preview {
+  margin-top: 20px;
 }
 
 input::placeholder {
@@ -113,7 +121,7 @@ textarea::placeholder {
 .brn__register {
   width: 356px; 
   height: 52px; 
-  background-color: black;
+  background-color: #FF0B8F;
   font-weight: bold;
   font-size: 24px;
   border-radius: 4px;
@@ -141,7 +149,6 @@ textarea::placeholder {
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  gap: 10px;
   z-index: 1000;
 }
 
